@@ -1,0 +1,77 @@
+/*
+ * huypq_stm32f407xx.h
+ *
+ *  Created on: Mar 13, 2024
+ *      Author: Huy Phan Quang
+ */
+
+#ifndef INC_HUYPQ_STM32F407XX_H_
+#define INC_HUYPQ_STM32F407XX_H_
+
+/*
+ * Base address of FLASH and SRAM memory
+ */
+#define FLASH_BASEADDR         0x08000000U  /*FLASH Base memory address*/
+#define SRAM1_BASEADDR 		   0x20000000U  /*112KB = 112*1024 byte = 1C000 in Hex */
+#define SRAM2_BASEADDR 		   0x2001C000U  /*FLASH Base memory address*/
+#define ROM__BASEADDR	 	   0x1FFF0000U  /*30Kb - System memory */
+#define SRAM				   SRAM1_BASEADDR
+
+/*
+ * Base address of AHBx and APBx bus
+ */
+#define PERIPH_BASEADDR            0x40000000U
+#define APB1PERIPH_BASEADDR        PERIPH_BASE
+#define APB2PERIPH_BASEADDR        0x40010000U
+#define AHB1PERIPH_BASEADDR		   0x40020000U
+#define AHB2PERIPH_BASEADDR		   0x50000000U
+#define AHB3PERIPH_BASEADDR        0xA0000000U
+
+/*
+ * Base address of peripherals on AHB1 bus
+ */
+#define GPIOA_BASEADDR          AHB1PERIPH_BASE
+#define GPIOB_BASEADDR		    0x40020400U
+#define GPIOC_BASEADDR			0x4002080U
+#define GPIOD_BASEADDR			0x40020C00U
+#define GPIOE_BASEADDR			0x40021000U
+#define GPIOF_BASEADDR			0x40021400U
+#define GPIOG_BASEADDR			0x40021800U
+#define GPIOH_BASEADDR			0x40021C00U
+#define GPIOI_BASEADDR			0x40022000U
+#define GPIOJ_BASEADDR			0x40022400U
+#define GPIOK_BASEADDR			0x40022800U
+#define CRC_BASEADDR			0x40023000U
+#define RCC_BASEADDR			0x40023800U
+
+/*
+ * Base address of peripherals on APB1 bus
+ */
+#define SPI2_BASEADDR			0x40003800U
+#define SPI3_BASEADDR			0x40003C00U
+#define UART2_BASEADDR			0x40004400U
+#define USART3_BASEADDR			0x40004800U
+#define USART4_BASEADDR			0x40004C00U
+#define UART5_BASEADDR			0x40005000U
+#define I2C1_BASEADDR			0x40005400U
+#define I2C2_BASEADDR			0x40005800U
+#define I2C3_BASEADDR			0x40005C00U
+#define CAN1_BASEADDR			0x40006400U
+#define CAN2_BASEADDR			0x40006800U
+#define UART7_BASEADDR			0x40007800U
+#define UART8_BASEADDR			0x40007C00U
+
+
+/*
+ * Base address of peripherals on APB2 bus
+ */
+#define USART1_BASEADDR			0x40011000U
+#define USART6_BASEADDR			0x40011400U
+#define SPI1_BASEADDR			0x4001300OU
+#define SPI4_BASEADDR			0x40013400U
+#define SYSCFG_BASEADDR			0x40013800U
+#define EXTI_BASEADDR			0x40013C00U
+#define SPI5_BASEADDR			0x40015000U
+#define SPI6_BASEADDR			0x40015400U
+
+#endif /* INC_HUYPQ_STM32F407XX_H_ */
