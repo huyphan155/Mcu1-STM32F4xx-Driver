@@ -8,6 +8,11 @@
 #ifndef INC_HUYPQ_STM32F407XX_H_
 #define INC_HUYPQ_STM32F407XX_H_
 
+#include <stdint.h>
+
+/***********************************************************
+ ***************MEMORY BASE ADDRESS*************************
+ ***********************************************************/
 /*
  * Base address of FLASH and SRAM memory
  */
@@ -73,5 +78,201 @@
 #define EXTI_BASEADDR			0x40013C00U
 #define SPI5_BASEADDR			0x40015000U
 #define SPI6_BASEADDR			0x40015400U
+
+/*********************************************************************
+ ***********PERIPHERAL REGISTER MAP ADDRESS STRUCTURE****************
+ ********************************************************************/
+
+/*********GPIO-General-purpose-I/O***************/
+
+/*
+ * how to use : example with GPIOA
+ * //define a pointer with value is base address of GPIOA :
+ * GPIO_RegMap_t *pGPIOA = (GPIO_RegMap_t*)0x40020000U // 0x40020000U is base address of GPIOA
+ * // access to peripheral of GPIO with :
+ * pGPIOA->MODER = 25 // store value 25 to MODER register of GPIOA
+ * ( compiler will do : *(0x40020000U + 0x00) = 25 )
+*/
+typedef struct
+{
+    volatile uint32_t MODER;               // GPIO port mode register
+    volatile uint32_t OTYPER;              // GPIO port output type register
+    volatile uint32_t OSPEEDR;             // GPIO port output speed register
+    volatile uint32_t PUPDR;               // GPIO port pull-up/pull-down register
+    volatile uint32_t IDR;                 // GPIO port input data register
+    volatile uint32_t ODR;                 // GPIO port output data register
+    volatile uint32_t BSRR;                // GPIO port bit set/reset register
+    volatile uint32_t LCKR;                // GPIO port configuration lock register
+    volatile uint32_t AFRL;                // GPIO alternate function low register
+    volatile uint32_t AFRH;                // GPIO alternate function high register
+}GPIO_RegMap_t;
+
+/*
+ * GPIO Peripheral Base address cast to struct pointer type of GPIO
+ * now instead of :  GPIO_RegMap_t *pGPIOA = (GPIO_RegMap_t*)0x40020000U
+ * you can use    :  GPIO_RegMap_t *pGPIOA = GPIOA
+ */
+#define GPIOA        (GPIO_RegMap_t*)GPIOA_BASEADDR
+#define GPIOB        (GPIO_RegMap_t*)GPIOB_BASEADDR
+#define GPIOC        (GPIO_RegMap_t*)GPIOC_BASEADDR
+#define GPIOD        (GPIO_RegMap_t*)GPIOD_BASEADDR
+#define GPIOE        (GPIO_RegMap_t*)GPIOE_BASEADDR
+#define GPIOF        (GPIO_RegMap_t*)GPIOF_BASEADDR
+#define GPIOG        (GPIO_RegMap_t*)GPIOG_BASEADDR
+#define GPIOH        (GPIO_RegMap_t*)GPIOH_BASEADDR
+#define GPIOI        (GPIO_RegMap_t*)GPIOI_BASEADDR
+#define GPIOJ        (GPIO_RegMap_t*)GPIOJ_BASEADDR
+#define GPIOK        (GPIO_RegMap_t*)GPIOK_BASEADDR
+
+/*********RCC-Reset and clock control***************/
+typedef struct
+{
+    volatile uint32_t CR;                 // RCC clock control register
+    volatile uint32_t PLLCFGR;            // RCC PLL configuration register
+    volatile uint32_t CFGR;               // RCC clock configuration register
+    volatile uint32_t CIR;                // RCC clock interrupt register
+    volatile uint32_t AHB1RSTR;           // RCC AHB1 peripheral reset register
+    volatile uint32_t AHB2RSTR;           // RCC AHB2 peripheral reset register
+    volatile uint32_t AHB3RSTR;           // RCC AHB3 peripheral reset register
+    uint32_t RESERVED1;                   // Reserved
+    volatile uint32_t APB1RSTR;           // RCC APB1 peripheral reset register
+    volatile uint32_t APB2RSTR;           // RCC APB2 peripheral reset register
+    uint32_t RESERVED2[2];                // Reserved
+    volatile uint32_t AHB1ENR;            // RCC AHB1 peripheral clock enable register
+    volatile uint32_t AHB2ENR;            // RCC AHB2 peripheral clock enable register
+    volatile uint32_t AHB3ENR;            // RCC AHB3 peripheral clock enable register
+    uint32_t RESERVED3;                   // Reserved
+    volatile uint32_t APB1ENR;            // RCC APB1 peripheral clock enable register
+    volatile uint32_t APB2ENR;            // RCC APB2 peripheral clock enable register
+    uint32_t RESERVED4[2];                // Reserved
+    volatile uint32_t AHB1LPENR;          // RCC AHB1 peripheral clock enable in low power mode register
+    volatile uint32_t AHB2LPENR;          // RCC AHB2 peripheral clock enable in low power mode register
+    volatile uint32_t AHB3LPENR;          // RCC AHB3 peripheral clock enable in low power mode register
+    uint32_t RESERVED5;                   // Reserved
+    volatile uint32_t APB1LPEN;           // RCC APB1 peripheral clock enable in low power mode register
+    volatile uint32_t APB2LPENR;          // RCC APB2 peripheral clock enabled in low power mode
+    uint32_t RESERVED6[2];                // Reserved
+    volatile uint32_t BDCR;               // RCC Backup domain control register
+    volatile uint32_t CSR;                // RCC clock control & status register
+    volatile uint32_t SSCGR;              // RCC spread spectrum clock generation register
+    volatile uint32_t PLLI2SCFGR;         // RCC PLLI2S configuration register
+}RCC_RegMap_t;
+
+/*
+ * RCC Peripheral Base address cast to struct pointer type of RCC
+ */
+#define RCC           (RCC_RegMap_t*)RCC_BASEADDR
+
+
+/*********CLOCK ENABLE AND DISABLE***************/
+/*
+ * Clock enable Marco for GPIOx peripheral
+ */
+#define GPIOA_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 0 ) )
+#define GPIOB_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 1 ) )
+#define GPIOC_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 2 ) )
+#define GPIOD_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 3 ) )
+#define GPIOE_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 4 ) )
+#define GPIOF_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 5 ) )
+#define GPIOG_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 6 ) )
+#define GPIOH_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 7 ) )
+#define GPIOI_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 8 ) )
+//#define GPIOJ_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 9 ) )
+//#define GPIOK_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 10 ) )
+
+/*
+ * Clock enable Marco for I2Cx peripheral
+ */
+#define I2C1_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 21 ) )
+#define I2C2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 22 ) )
+#define I2C3_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 23 ) )
+
+/*
+ * Clock enable Marco for SPIx peripheral
+ */
+#define SPI1_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 12 ) )
+#define SPI2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 14 ) )
+#define SPI3_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 15 ) )
+//#define SPI4_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 13 ) ) //
+//#define SPI5_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 12 ) )
+//#define SPI6_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 12 ) )
+
+/*
+ * Clock enable Marco for UARTx peripheral
+ */
+#define USART1_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 4 ) )
+#define USART2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 17 ) )
+#define USART3_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 18 ) )
+#define UART4_PERIF_CLK_EB          ( RCC->APB1ENR |= ( 1 << 19 ) )
+#define UART5_PERIF_CLK_EB          ( RCC->APB1ENR |= ( 1 << 20 ) )
+#define USART6_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 5 ) )
+//#define UART7_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 12 ) )
+//#define UART8_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 12 ) )
+
+/*
+ * Clock enable Marco for CANx peripheral
+ */
+#define CAN1_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 25 ) )
+#define CAN2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 26 ) )
+
+/*
+ * Clock enable Marco for SYSCFG peripheral
+ */
+#define SYSCFG_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 14 ) )
+
+/*
+ * Clock disable Marco for GPIOx peripheral
+ */
+#define GPIOA_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 0 ) )
+#define GPIOB_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 1 ) )
+#define GPIOC_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 2 ) )
+#define GPIOD_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 3 ) )
+#define GPIOE_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 4 ) )
+#define GPIOF_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 5 ) )
+#define GPIOG_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 6 ) )
+#define GPIOH_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 7 ) )
+#define GPIOI_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 8 ) )
+//#define GPIOJ_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 9 ) )
+//#define GPIOK_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 10 ) )
+
+/*
+ * Clock disable Marco for I2Cx peripheral
+ */
+#define I2C1_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 21 ) )
+#define I2C2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 22 ) )
+#define I2C3_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 23 ) )
+
+/*
+ * Clock disable Marco for SPIx peripheral
+ */
+#define SPI1_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+#define SPI2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 14 ) )
+#define SPI3_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 15 ) )
+//#define SPI4_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+//#define SPI5_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+//#define SPI6_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+
+/*
+ * Clock disable Marco for UARTx peripheral
+ */
+#define USART1_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 4 ) )
+#define USART2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 17 ) )
+#define USART3_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 18 ) )
+#define UART4_PERIF_CLK_DI          ( RCC->APB1ENR &= ~( 1 << 19 ) )
+#define UART5_PERIF_CLK_DI          ( RCC->APB1ENR &= ~( 1 << 20 ) )
+#define USART6_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 5 ) )
+//#define UART7_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 12 ) )
+//#define UART8_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 12 ) )
+
+/*
+ * Clock disable Marco for CANx peripheral
+ */
+#define CAN1_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 25 ) )
+#define CAN2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 26 ) )
+
+/*
+ * Clock disable Marco for SYSCFG peripheral
+ */
+#define SYSCFG_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 14 ) )
 
 #endif /* INC_HUYPQ_STM32F407XX_H_ */
