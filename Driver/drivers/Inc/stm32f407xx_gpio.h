@@ -68,9 +68,9 @@ typedef struct
 #define GPIO_MODE_OUT        1
 #define GPIO_MODE_ALTFN      2
 #define GPIO_MODE_ANALOG     3
-#define GPIO_MODE_IT_FT      4            // interupt falling edge
-#define GPIO_MODE_IT_RT      5            // interupt rising edge
-#define GPIO_MODE_IT_RFT     6            // interupt falling edge, rising edge trigger
+#define GPIO_MODE_IT_FT      4            // interrupt falling edge
+#define GPIO_MODE_IT_RT      5            // interrupt rising edge
+#define GPIO_MODE_IT_RFT     6            // interrupt falling edge, rising edge trigger
 
 
 /*
@@ -110,17 +110,17 @@ uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI);
 /*
  * Init and De-init
  */
-uint8_t GPIO_Init(GPIO_Handle_t *pGPIOx);
-uint8_t GPIO_DeInit(GPIO_Handle_t *pGPIOx);
+uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle);
+uint8_t GPIO_DeInit(GPIO_RegMap_t *pGPIOx);
 
 /*
  * Data read and write
  */
-uint8_t GPIO_ReadFromInputPin(GPIO_Handle_t *pGPIOx, uint8_t pinNumber);
-uint16_t GPIO_ReadFromInputPort(GPIO_Handle_t *pGPIOx);
-uint8_t GPIO_WriteToOutputPin(GPIO_Handle_t *pGPIOx, uint8_t pinNumber, uint8_t value);
-uint8_t GPIO_WriteToOutputPort(GPIO_Handle_t *pGPIOx, uint16_t value);
-uint8_t GPIO_ToggleOutputPin(GPIO_Handle_t *pGPIOx, uint8_t pinNumber);
+uint8_t GPIO_ReadFromInputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber);
+uint16_t GPIO_ReadFromInputPort(GPIO_RegMap_t *pGPIOx);
+uint8_t GPIO_WriteToOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber, uint8_t value);
+uint8_t GPIO_WriteToOutputPort(GPIO_RegMap_t *pGPIOx, uint16_t value);
+uint8_t GPIO_ToggleOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber);
 
 /*
  * IRQ Configuration and ISR handling
