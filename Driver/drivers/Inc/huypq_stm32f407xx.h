@@ -10,6 +10,35 @@
 
 #include <stdint.h>
 
+/************************************************
+ *                     MARCO
+ ************************************************/
+
+/*
+ * some generic marco
+ */
+#define ENABLE              1
+#define DISABLE             0
+#define SET                 1
+#define RESET               0
+#define GPIO_PIN_SET        1
+#define GPIO_PIN_RESET      0
+
+
+/**
+* @brief    : GPIO job return status
+*/
+typedef enum
+{
+    GPIO_JOB_OK = 0,               /**< @brief The job has been finished succesfully */
+    GPIO_JOB_FAILED,               /**< @brief The job has not been finished succesfully */
+	GPIO_JOB_PENDING,              /**< @brief The job has not yet been finished */
+	GPIO_JOB_CANCELED,             /**< @brief The job has been canceled */
+	GPIO_BLOCK_INCONSISTENT,       /**< @brief The requested block is inconsistent, it may contain corrupted data */
+	GPIO_BLOCK_INVALID             /**< @brief The requested block has been marked as invalid, the requested operation can not be performed */
+}GPIO_JobResultType;
+
+
 /***********************************************************
  ***************MEMORY BASE ADDRESS*************************
  ***********************************************************/
@@ -35,7 +64,7 @@
 /*
  * Base address of peripherals on AHB1 bus
  */
-#define GPIOA_BASEADDR          AHB1PERIPH_BASE
+#define GPIOA_BASEADDR          AHB1PERIPH_BASEADDR
 #define GPIOB_BASEADDR		    0x40020400U
 #define GPIOC_BASEADDR			0x4002080U
 #define GPIOD_BASEADDR			0x40020C00U
@@ -80,7 +109,7 @@
 #define SPI6_BASEADDR			0x40015400U
 
 /*********************************************************************
- ***********PERIPHERAL REGISTER MAP ADDRESS STRUCTURE****************
+ *           PERIPHERAL REGISTER MAP ADDRESS STRUCTURE
  ********************************************************************/
 
 /*********GPIO-General-purpose-I/O***************/
@@ -161,59 +190,57 @@ typedef struct
 /*
  * RCC Peripheral Base address cast to struct pointer type of RCC
  */
-#define RCC           (RCC_RegMap_t*)RCC_BASEADDR
+#define RCC           ((RCC_RegMap_t*)(RCC_BASEADDR))
 
 
 /*********CLOCK ENABLE AND DISABLE***************/
 /*
  * Clock enable Marco for GPIOx peripheral
  */
-#define GPIOA_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 0 ) )
-#define GPIOB_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 1 ) )
-#define GPIOC_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 2 ) )
-#define GPIOD_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 3 ) )
-#define GPIOE_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 4 ) )
-#define GPIOF_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 5 ) )
-#define GPIOG_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 6 ) )
-#define GPIOH_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 7 ) )
-#define GPIOI_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 8 ) )
-//#define GPIOJ_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 9 ) )
-//#define GPIOK_PERIF_CLK_EB         ( RCC->AHB1ENR |= ( 1 << 10 ) )
+#define GPIOA_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 0 ) )
+#define GPIOB_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 1 ) )
+#define GPIOC_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 2 ) )
+#define GPIOD_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 3 ) )
+#define GPIOE_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 4 ) )
+#define GPIOF_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 5 ) )
+#define GPIOG_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 6 ) )
+#define GPIOH_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 7 ) )
+#define GPIOI_PERIF_CLK_EB()         ( RCC->AHB1ENR |= ( 1 << 8 ) )
 
 /*
  * Clock enable Marco for I2Cx peripheral
  */
-#define I2C1_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 21 ) )
-#define I2C2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 22 ) )
-#define I2C3_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 23 ) )
+#define I2C1_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 21 ) )
+#define I2C2_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 22 ) )
+#define I2C3_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 23 ) )
 
 /*
  * Clock enable Marco for SPIx peripheral
  */
-#define SPI1_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 12 ) )
-#define SPI2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 14 ) )
-#define SPI3_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 15 ) )
-//#define SPI4_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 13 ) ) //
-//#define SPI5_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 12 ) )
-//#define SPI6_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 12 ) )
+#define SPI1_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 12 ) )
+#define SPI2_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 14 ) )
+#define SPI3_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 15 ) )
+//#define SPI4_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 13 ) ) //
+//#define SPI5_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 12 ) )
+//#define SPI6_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 12 ) )
 
 /*
  * Clock enable Marco for UARTx peripheral
  */
-#define USART1_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 4 ) )
-#define USART2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 17 ) )
-#define USART3_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 18 ) )
-#define UART4_PERIF_CLK_EB          ( RCC->APB1ENR |= ( 1 << 19 ) )
-#define UART5_PERIF_CLK_EB          ( RCC->APB1ENR |= ( 1 << 20 ) )
-#define USART6_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 5 ) )
-//#define UART7_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 12 ) )
-//#define UART8_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 12 ) )
+#define USART1_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 4 ) )
+#define USART2_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 17 ) )
+#define USART3_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 18 ) )
+#define UART4_PERIF_CLK_EB()          ( RCC->APB1ENR |= ( 1 << 19 ) )
+#define UART5_PERIF_CLK_EB()          ( RCC->APB1ENR |= ( 1 << 20 ) )
+#define USART6_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 5 ) )
+//#define UART7_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 12 ) )
+//#define UART8_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 12 ) )
 
 /*
  * Clock enable Marco for CANx peripheral
  */
-#define CAN1_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 25 ) )
-#define CAN2_PERIF_CLK_EB         ( RCC->APB1ENR |= ( 1 << 26 ) )
+#define CAN1_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 25 ) )
+#define CAN2_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 26 ) )
 
 /*
  * Clock enable Marco for SYSCFG peripheral
@@ -223,56 +250,56 @@ typedef struct
 /*
  * Clock disable Marco for GPIOx peripheral
  */
-#define GPIOA_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 0 ) )
-#define GPIOB_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 1 ) )
-#define GPIOC_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 2 ) )
-#define GPIOD_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 3 ) )
-#define GPIOE_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 4 ) )
-#define GPIOF_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 5 ) )
-#define GPIOG_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 6 ) )
-#define GPIOH_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 7 ) )
-#define GPIOI_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 8 ) )
-//#define GPIOJ_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 9 ) )
-//#define GPIOK_PERIF_CLK_DI         ( RCC->AHB1ENR &= ~( 1 << 10 ) )
+#define GPIOA_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 0 ) )
+#define GPIOB_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 1 ) )
+#define GPIOC_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 2 ) )
+#define GPIOD_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 3 ) )
+#define GPIOE_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 4 ) )
+#define GPIOF_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 5 ) )
+#define GPIOG_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 6 ) )
+#define GPIOH_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 7 ) )
+#define GPIOI_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 8 ) )
+//#define GPIOJ_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 9 ) )
+//#define GPIOK_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 10 ) )
 
 /*
  * Clock disable Marco for I2Cx peripheral
  */
-#define I2C1_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 21 ) )
-#define I2C2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 22 ) )
-#define I2C3_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 23 ) )
+#define I2C1_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 21 ) )
+#define I2C2_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 22 ) )
+#define I2C3_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 23 ) )
 
 /*
  * Clock disable Marco for SPIx peripheral
  */
-#define SPI1_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
-#define SPI2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 14 ) )
-#define SPI3_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 15 ) )
-//#define SPI4_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
-//#define SPI5_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
-//#define SPI6_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+#define SPI1_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+#define SPI2_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 14 ) )
+#define SPI3_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 15 ) )
+//#define SPI4_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+//#define SPI5_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
+//#define SPI6_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
 
 /*
  * Clock disable Marco for UARTx peripheral
  */
-#define USART1_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 4 ) )
-#define USART2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 17 ) )
-#define USART3_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 18 ) )
-#define UART4_PERIF_CLK_DI          ( RCC->APB1ENR &= ~( 1 << 19 ) )
-#define UART5_PERIF_CLK_DI          ( RCC->APB1ENR &= ~( 1 << 20 ) )
-#define USART6_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 5 ) )
-//#define UART7_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 12 ) )
-//#define UART8_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 12 ) )
+#define USART1_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 4 ) )
+#define USART2_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 17 ) )
+#define USART3_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 18 ) )
+#define UART4_PERIF_CLK_DI()          ( RCC->APB1ENR &= ~( 1 << 19 ) )
+#define UART5_PERIF_CLK_DI()          ( RCC->APB1ENR &= ~( 1 << 20 ) )
+#define USART6_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 5 ) )
+//#define UART7_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 12 ) )
+//#define UART8_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 12 ) )
 
 /*
  * Clock disable Marco for CANx peripheral
  */
-#define CAN1_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 25 ) )
-#define CAN2_PERIF_CLK_DI         ( RCC->APB1ENR &= ~( 1 << 26 ) )
+#define CAN1_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 25 ) )
+#define CAN2_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 26 ) )
 
 /*
  * Clock disable Marco for SYSCFG peripheral
  */
-#define SYSCFG_PERIF_CLK_DI         ( RCC->APB2ENR &= ~( 1 << 14 ) )
+#define SYSCFG_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 14 ) )
 
 #endif /* INC_HUYPQ_STM32F407XX_H_ */
