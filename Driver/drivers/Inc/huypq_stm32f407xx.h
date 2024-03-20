@@ -317,4 +317,8 @@ typedef struct
 #define GPIOH_REG_RESET()         do {(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7)); }while(0)
 #define GPIOI_REG_RESET()         do {(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8)); }while(0)
 
+
+
+#include "stm32f407xx_gpio.h"
+
 #endif /* INC_HUYPQ_STM32F407XX_H_ */
