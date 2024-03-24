@@ -113,7 +113,13 @@ uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
  * @retval       GPIO_JOB_OK : The job has been finished successfully
  * @retval       OTHER :  The job fail
  *
- * @Note
+ * @Note          step to Configure GPIO interrupt :
+ * 				  1. Configure the edge trigger (RT,FT,RFT )
+ * 				  2. Enable interrupt delivery from peripheral to Processor (peripheral side )
+ * 				  3. Identify IRQ number which processor accepts the interrupt from that pin
+ * 				  4. configure the IRQ priority for the identified IRQ number(processor side )
+ * 			      5. Enable interrupt reception on that IRQ number (processor side)
+ * 			      6. Implement IRQ handler
  *
  */
 uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
@@ -127,11 +133,36 @@ uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 		tempReg = ( pGPIOHandle->GPIO_PinConfig.GPIO_PinMode << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
 		// clear before setting
 		pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
-		pGPIOHandle->pGPIOx->MODER |= tempReg;
+		pGPIOHandle->pGPIOx->MODER |= tempReg; // setting
 	}
 	else
 	{
-		// Interrupt mode. handler later. Do nothing.
+		if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT)
+		{
+			//set as input mode 00
+			pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
+			// 1. Configure the edge trigger (FT)
+			EXTI->EXTI_FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+			EXTI->EXTI_RTSR &= ~(1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); //disable RT
+		}
+		else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT)
+		{
+			// 1. Configure the edge trigger (RT)
+		}
+		else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
+		{
+			// 1. Configure the edge trigger (RFT)
+		}
+		// Configure the GPIO port selection in SYSCFG
+		uint8_t temp1 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber/4; //get the right SYSCFG_EXTICRx register
+		uint8_t temp2 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber%4; //get the right position
+		uint8_t portCode = GPIO_BASEADDR_TO_CODE(pGPIOHandle->pGPIOx);
+		SYSCFG_PERIF_CLK_EB(); // enable clock for SYSCFG
+		SYSCFG->SYSCFG_EXTICR[temp1] = portCode << (temp2*4);
+
+		// 2. Enable interrupt delivery from peripheral to Processor (peripheral side )
+		//. Enable the EXTI interrupt delivery using IMR
+		EXTI->EXTI_IMR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
 	}
 
 	// reset temp Register

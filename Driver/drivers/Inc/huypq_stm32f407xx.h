@@ -38,6 +38,18 @@ typedef enum
 	GPIO_BLOCK_INVALID             /**< @brief The requested block has been marked as invalid, the requested operation can not be performed */
 }GPIO_JobResultType;
 
+/**
+* @brief    : return portCode for given GPIOx base address
+*/
+#define GPIO_BASEADDR_TO_CODE(x) ( ( x == GPIOA ) ? 0 :\
+		                           ( x == GPIOB ) ? 1 :\
+		                           ( x == GPIOC ) ? 2 :\
+								   ( x == GPIOD ) ? 3 :\
+								   ( x == GPIOE ) ? 4 :\
+								   ( x == GPIOF ) ? 5 :\
+								   ( x == GPIOG ) ? 6 :\
+								   ( x == GPIOH ) ? 7 :\
+								   ( x == GPIOI ) ? 8 : 0 )
 
 /***********************************************************
  ***************MEMORY BASE ADDRESS*************************
@@ -220,9 +232,6 @@ typedef struct
 #define SPI1_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 12 ) )
 #define SPI2_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 14 ) )
 #define SPI3_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 15 ) )
-//#define SPI4_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 13 ) ) //
-//#define SPI5_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 12 ) )
-//#define SPI6_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 12 ) )
 
 /*
  * Clock enable Marco for UARTx peripheral
@@ -233,8 +242,6 @@ typedef struct
 #define UART4_PERIF_CLK_EB()          ( RCC->APB1ENR |= ( 1 << 19 ) )
 #define UART5_PERIF_CLK_EB()          ( RCC->APB1ENR |= ( 1 << 20 ) )
 #define USART6_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 5 ) )
-//#define UART7_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 12 ) )
-//#define UART8_PERIF_CLK_EB()         ( RCC->APB1ENR |= ( 1 << 12 ) )
 
 /*
  * Clock enable Marco for CANx peripheral
@@ -245,7 +252,7 @@ typedef struct
 /*
  * Clock enable Marco for SYSCFG peripheral
  */
-#define SYSCFG_PERIF_CLK_EB         ( RCC->APB2ENR |= ( 1 << 14 ) )
+#define SYSCFG_PERIF_CLK_EB()         ( RCC->APB2ENR |= ( 1 << 14 ) )
 
 /*
  * Clock disable Marco for GPIOx peripheral
@@ -259,8 +266,6 @@ typedef struct
 #define GPIOG_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 6 ) )
 #define GPIOH_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 7 ) )
 #define GPIOI_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 8 ) )
-//#define GPIOJ_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 9 ) )
-//#define GPIOK_PERIF_CLK_DI()         ( RCC->AHB1ENR &= ~( 1 << 10 ) )
 
 /*
  * Clock disable Marco for I2Cx peripheral
@@ -275,9 +280,6 @@ typedef struct
 #define SPI1_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
 #define SPI2_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 14 ) )
 #define SPI3_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 15 ) )
-//#define SPI4_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
-//#define SPI5_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
-//#define SPI6_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 12 ) )
 
 /*
  * Clock disable Marco for UARTx peripheral
@@ -288,8 +290,6 @@ typedef struct
 #define UART4_PERIF_CLK_DI()          ( RCC->APB1ENR &= ~( 1 << 19 ) )
 #define UART5_PERIF_CLK_DI()          ( RCC->APB1ENR &= ~( 1 << 20 ) )
 #define USART6_PERIF_CLK_DI()         ( RCC->APB2ENR &= ~( 1 << 5 ) )
-//#define UART7_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 12 ) )
-//#define UART8_PERIF_CLK_DI()         ( RCC->APB1ENR &= ~( 1 << 12 ) )
 
 /*
  * Clock disable Marco for CANx peripheral
@@ -317,6 +317,37 @@ typedef struct
 #define GPIOH_REG_RESET()         do {(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7)); }while(0)
 #define GPIOI_REG_RESET()         do {(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8)); }while(0)
 
+/*********EXTERNAL INTERRUPT/EVENT CONTROLLER***************/
+typedef struct
+{
+	volatile uint32_t EXTI_IMR;               // Interrupt mask register
+	volatile uint32_t EXTI_EMR;               // Event mask register
+	volatile uint32_t EXTI_RTSR;              // Rising trigger selection register
+	volatile uint32_t EXTI_FTSR;              // Falling trigger selection register
+	volatile uint32_t EXTI_SWIER;             // Software interrupt event register
+	volatile uint32_t EXTI_PR;                // Pending register
+}EXTI_RegMap_t;
+
+/*
+ * EXTI Peripheral Base address cast to struct pointer type of EXTI
+ */
+#define EXTI           ((EXTI_RegMap_t*)(EXTI_BASEADDR))
+
+
+
+/*********SYSTEM CONFIGURATION CONTROLLER (SYSCFG)***************/
+typedef struct
+{
+	volatile uint32_t SYSCFG_MEMRMP;               // SYSCFG memory remap register
+	volatile uint32_t SYSCFG_PMC;                  // SYSCFG peripheral mode configuration register
+	volatile uint32_t SYSCFG_EXTICR[4];              // SYSCFG external interrupt configuration register
+	uint32_t RESERVED[2];                         // Reserved
+	volatile uint32_t SYSCFG_CMPCR;                // Compensation cell control register
+}SYSCFG_RegMap_t;
+/*
+ * EXTI Peripheral Base address cast to struct pointer type of EXTI
+ */
+#define SYSCFG           ((SYSCFG_RegMap_t*)(SYSCFG_BASEADDR))
 
 
 #include "stm32f407xx_gpio.h"
