@@ -10,6 +10,50 @@
 
 #include <stdint.h>
 
+/*****************************************************************************
+ *             Processor Specific Details : ARM_CORTEX M4
+ ****************************************************************************/
+/*
+ * Arm Cortex Mx processor NVIC ISERx register Addresses
+ * from : CortexM4 generic user guide 4.2
+ * @brief    : Interrupt Set-enable Registers
+ */
+#define NVIC_ISER0           ( (volatile uint32_t*) 0xE000E100U ) // cast to pointer tell the compiler that these values are addresses and not numbers.
+#define NVIC_ISER1           ( (volatile uint32_t*) 0xE000E104U )
+#define NVIC_ISER2           ( (volatile uint32_t*) 0xE000E108U )
+#define NVIC_ISER3           ( (volatile uint32_t*) 0xE000E10CU )
+#define NVIC_ISER4           ( (volatile uint32_t*) 0xE000E110U )
+#define NVIC_ISER5           ( (volatile uint32_t*) 0xE000E114U )
+#define NVIC_ISER6           ( (volatile uint32_t*) 0xE000E118U )
+#define NVIC_ISER7           ( (volatile uint32_t*) 0xE000E12CU )
+
+
+/*
+ * Arm Cortex Mx processor NVIC ISERx register Addresses
+ * from : CortexM4 generic user guide 4.2
+ * @brief    : Interrupt Clear-enable Registers
+ */
+#define NVIC_ICER0           ( (volatile uint32_t*) 0XE000E180U ) // cast to pointer tell the compiler that these values are addresses and not numbers.
+#define NVIC_ICER1           ( (volatile uint32_t*) 0xE000E184U )
+#define NVIC_ICER2           ( (volatile uint32_t*) 0xE000E188U )
+#define NVIC_ICER3           ( (volatile uint32_t*) 0xE000E18CU )
+#define NVIC_ICER4           ( (volatile uint32_t*) 0xE000E190U )
+#define NVIC_ICER5           ( (volatile uint32_t*) 0xE000E194U )
+#define NVIC_ICER6           ( (volatile uint32_t*) 0xE000E198U )
+#define NVIC_ICER7           ( (volatile uint32_t*) 0xE000E19CU )
+
+/*
+ * Arm Cortex Mx processor NVIC ISERx register Addresses
+ * from : CortexM4 generic user guide 4.2
+ * @brief    : Interrupt Priority Registers
+ */
+#define NVIC_IPR_BASEADDR           ( (volatile uint32_t*) 0xE000E400U ) // cast to pointer tell the compiler that these values are addresses and not numbers.
+
+/*
+ * Arm Cortex Mx processor number of priority bits implemented in Priority register
+ */
+#define NUM_PR_BITS_IMPLEMENTED        4
+
 /************************************************
  *                     MARCO
  ************************************************/
@@ -333,6 +377,22 @@ typedef struct
  */
 #define EXTI           ((EXTI_RegMap_t*)(EXTI_BASEADDR))
 
+/*
+ * IRQ ( Interrupt requests) number of STM32F407x MCU
+ */
+#define IRQ_NO_WWDG                 0
+#define IRQ_NO_PVD                  1
+#define IRQ_NO_TAMP_STAMP           2
+#define IRQ_NO_WKUP                 3
+#define IRQ_NO_FLASH                4
+#define IRQ_NO_RCC                  5
+#define IRQ_NO_EXTIO                6
+#define IRQ_NO_EXTI1                7
+#define IRQ_NO_EXTI2                8
+#define IRQ_NO_EXTI3                9
+#define IRQ_NO_EXTI4                10
+#define IRQ_NO_EXTI9_5              23
+#define IRQ_NO_EXTI15_10            40
 
 
 /*********SYSTEM CONFIGURATION CONTROLLER (SYSCFG)***************/

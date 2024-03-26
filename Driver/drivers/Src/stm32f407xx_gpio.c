@@ -114,12 +114,12 @@ uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
  * @retval       OTHER :  The job fail
  *
  * @Note          step to Configure GPIO interrupt :
- * 				  1. Configure the edge trigger (RT,FT,RFT )
- * 				  2. Enable interrupt delivery from peripheral to Processor (peripheral side )
- * 				  3. Identify IRQ number which processor accepts the interrupt from that pin
- * 				  4. configure the IRQ priority for the identified IRQ number(processor side )
- * 			      5. Enable interrupt reception on that IRQ number (processor side)
- * 			      6. Implement IRQ handler
+ * 				  E1. Configure the edge trigger (RT,FT,RFT )
+ * 				  E2. Enable interrupt delivery from peripheral to Processor (peripheral side )
+ * 				  E3. Identify IRQ number which processor accepts the interrupt from that pin
+ * 				  E4. configure the IRQ priority for the identified IRQ number(processor side )
+ * 			      E5. Enable interrupt reception on that IRQ number (processor side)
+ * 			      E6. Implement IRQ handler
  *
  */
 uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
@@ -135,23 +135,23 @@ uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 		pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
 		pGPIOHandle->pGPIOx->MODER |= tempReg; // setting
 	}
-	else
+	else // interrupt mode
 	{
 		if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT)
 		{
 			//set as input mode 00
 			pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
-			// 1. Configure the edge trigger (FT)
+			// E1. Configure the edge trigger (FT)
 			EXTI->EXTI_FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
 			EXTI->EXTI_RTSR &= ~(1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); //disable RT
 		}
 		else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT)
 		{
-			// 1. Configure the edge trigger (RT)
+			// E1. Configure the edge trigger (RT)
 		}
 		else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
 		{
-			// 1. Configure the edge trigger (RFT)
+			// E1. Configure the edge trigger (RFT)
 		}
 		// Configure the GPIO port selection in SYSCFG
 		uint8_t temp1 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber/4; //get the right SYSCFG_EXTICRx register
@@ -160,7 +160,7 @@ uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 		SYSCFG_PERIF_CLK_EB(); // enable clock for SYSCFG
 		SYSCFG->SYSCFG_EXTICR[temp1] = portCode << (temp2*4);
 
-		// 2. Enable interrupt delivery from peripheral to Processor (peripheral side )
+		// E2. Enable interrupt delivery from peripheral to Processor (peripheral side )
 		//. Enable the EXTI interrupt delivery using IMR
 		EXTI->EXTI_IMR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
 	}
@@ -401,5 +401,112 @@ uint8_t GPIO_ToggleOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber)
 /******************************************************************************************
  *								IRQ Configuration and ISR handling
  ******************************************************************************************/
-uint8_t GPIO_IRQConfig(uint8_t IRQNumber,uint8_t IRQPriority,uint8_t EnOrDI);
-uint8_t GPIO_IRQHandling(uint8_t pinNumber);
+/**
+ * @brief Configures the interrupt for a given IRQ number.
+ *
+ * @details Enables or disables the interrupt based on the provided parameters.
+ *
+ * @param[in] IRQNumber : The IRQ number to configure.
+ * @param[in] EnOrDI    : Specifies whether to enable or disable the interrupt (ENABLE or DISABLE).
+ *
+ * @return GPIO_JobResultType
+ * @retval GPIO_JOB_OK   The job has been finished successfully.
+ * @retval OTHER         The job failed.
+ *
+ * @note This function configures interrupt settings by programming NVIC ISER/ICER registers.
+ * 		  E5. Enable interrupt reception on that IRQ number (processor side)
+ */
+uint8_t GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDI)
+{
+	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
+	if(EnOrDI == ENABLE)
+	{
+		if(IRQNumber <= 31)
+		{
+			//program ISER0 register
+			*NVIC_ISER0 |= ( 1 << IRQNumber );
+		}else if(IRQNumber > 31 && IRQNumber < 64 ) //32 to 63
+		{
+			//program ISER1 register
+			*NVIC_ISER1 |= ( 1 << (IRQNumber % 32) );
+		}
+		else if(IRQNumber >= 64 && IRQNumber < 96 )
+		{
+			//program ISER2 register //64 to 95
+			*NVIC_ISER2 |= ( 1 << (IRQNumber % 64) );
+		}
+	}else
+	{
+		if(IRQNumber <= 31)
+		{
+			//program ICER0 register
+			*NVIC_ICER0 |= ( 1 << IRQNumber );
+		}else if(IRQNumber > 31 && IRQNumber < 64 )
+		{
+			//program ICER1 register
+			*NVIC_ICER1 |= ( 1 << (IRQNumber % 32) );
+		}
+		else if(IRQNumber >= 64 && IRQNumber < 96 )
+		{
+			//program ICER2 register
+			*NVIC_ICER2 |= ( 1 << (IRQNumber % 64) );
+		}
+	}
+	return eLldRetVal;
+}
+
+/**
+ * @brief Configures the priority for a given IRQ number.
+ *
+ * @details Sets the priority level for the specified IRQ.
+ *
+ * @param[in] IRQNumber   :    The IRQ number to configure.
+ * @param[in] IRQPriority :  The priority level for the IRQ.
+ *
+ * @return GPIO_JobResultType
+ * @retval GPIO_JOB_OK   The job has been finished successfully.
+ * @retval OTHER         The job failed.
+ *
+ * @note This function configures the priority of the IRQ by writing to NVIC IPR registers.
+ *       E4. configure the IRQ priority for the identified IRQ number(processor side )
+ */
+uint8_t GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
+{
+	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
+	/*1. find out the ipr register of IRQNumber*/
+	uint8_t iprx = IRQNumber / 4 ;
+	/*2. tim ra field(8 bit) quy dinh priority cua loai IRQ*/
+	uint8_t iprx_section = IRQNumber % 4;
+
+	uint8_t shift_amount = (8*iprx_section) + (8 - NUM_PR_BITS_IMPLEMENTED);
+
+	/*con tro kieu uint32 nen chi can + iprx de ra duoc dia chi thanh ghi*/
+	*(NVIC_IPR_BASEADDR + iprx) |= ( IRQPriority << shift_amount);
+	return eLldRetVal;
+}
+
+/**
+ * @brief        GPIO IRQ handling
+ *
+ * @details      Clears the pending interrupt flag corresponding to the specified pin number.
+ *
+ * @param[in]    pinNumber : pin number
+ *
+ * @return       GPIO_JobResultType
+ * @retval       GPIO_JOB_OK : The job has been finished successfully
+ * @retval       OTHER :  The job fail
+ *
+ * @Note         E6. Implement IRQ handler
+ *
+ */
+uint8_t GPIO_IRQHandling(uint8_t pinNumber)
+{
+	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
+	//clear the exti PR register corresponding to the pin number
+	if (EXTI->EXTI_PR & (1 << pinNumber))
+	{
+		//clear by write 1 to the PR register
+		EXTI->EXTI_PR |= (1 << pinNumber);
+	}
+	return eLldRetVal;
+}
