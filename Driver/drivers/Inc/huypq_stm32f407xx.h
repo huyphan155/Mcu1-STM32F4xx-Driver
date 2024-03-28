@@ -1,18 +1,29 @@
-/*
- * huypq_stm32f407xx.h
- *
- *  Created on: Mar 13, 2024
- *      Author: Huy Phan Quang
- */
+/*==================================================================================================
+*   Project              : MCU1 Driver for STM32F4xx
+*   Platform             : CORTEXM
+*   Peripheral           : SPI
+*
+*   SW Version           : 1.0.0
+*   Created on           : Mar, 2024
+*   Author               : Huy Phan Quang
+*
+==================================================================================================*/
+/**
+*   @file    huypq_stm32f407xx.h
+*
+*   @brief   Header file for STM32F4xx
+*   @details Header file for STM32F4xx
+*
+*/
 
 #ifndef INC_HUYPQ_STM32F407XX_H_
 #define INC_HUYPQ_STM32F407XX_H_
 
 #include <stdint.h>
 
-/*****************************************************************************
- *             Processor Specific Details : ARM_CORTEX M4
- ****************************************************************************/
+/*==================================================================================================
+*                             Processor Specific Details : ARM_CORTEX M4
+==================================================================================================*/
 /*
  * Arm Cortex Mx processor NVIC ISERx register Addresses
  * from : CortexM4 generic user guide 4.2
@@ -54,9 +65,9 @@
  */
 #define NUM_PR_BITS_IMPLEMENTED        4
 
-/************************************************
- *                     MARCO
- ************************************************/
+/*==================================================================================================
+*                                      DEFINES AND MACROS
+==================================================================================================*/
 
 /*
  * some generic marco
@@ -70,7 +81,7 @@
 
 
 /**
-* @brief    : GPIO job return status
+* @brief     GPIO job return status
 */
 typedef enum
 {
@@ -81,6 +92,19 @@ typedef enum
 	GPIO_BLOCK_INCONSISTENT,       /**< @brief The requested block is inconsistent, it may contain corrupted data */
 	GPIO_BLOCK_INVALID             /**< @brief The requested block has been marked as invalid, the requested operation can not be performed */
 }GPIO_JobResultType;
+
+/**
+* @brief   This type defines a range of specific Jobs status for SPI Driver.
+*
+*/
+typedef enum
+{
+    SPI_JOB_OK = 0,     /**< @brief The last transmission of the Job has been finished successfully. */
+    SPI_JOB_PENDING,    /**< @brief The SPI Handler/Driver is performing a SPI Job. The meaning of this status is equal to SPI_BUSY.. */
+    SPI_JOB_FAILED,     /**< @brief The last transmission of the Job has failed. */
+    SPI_JOB_QUEUED      /**< @brief An asynchronous transmit Job has been accepted, while actual
+                                     transmission for this Job has not started yet. */
+} Spi_JobResultType;
 
 /**
 * @brief    : return portCode for given GPIOx base address
@@ -94,10 +118,9 @@ typedef enum
 								   ( x == GPIOG ) ? 6 :\
 								   ( x == GPIOH ) ? 7 :\
 								   ( x == GPIOI ) ? 8 : 0 )
-
-/***********************************************************
- ***************MEMORY BASE ADDRESS*************************
- ***********************************************************/
+/*==================================================================================================
+*                                      MEMORY BASE ADDRESS
+==================================================================================================*/
 /*
  * Base address of FLASH and SRAM memory
  */
@@ -157,18 +180,19 @@ typedef enum
  */
 #define USART1_BASEADDR			0x40011000U
 #define USART6_BASEADDR			0x40011400U
-#define SPI1_BASEADDR			0x4001300OU
+#define SPI1_BASEADDR			0x40013000U
 #define SPI4_BASEADDR			0x40013400U
 #define SYSCFG_BASEADDR			0x40013800U
 #define EXTI_BASEADDR			0x40013C00U
 #define SPI5_BASEADDR			0x40015000U
 #define SPI6_BASEADDR			0x40015400U
 
-/*********************************************************************
- *           PERIPHERAL REGISTER MAP ADDRESS STRUCTURE
- ********************************************************************/
-
-/*********GPIO-General-purpose-I/O***************/
+/*==================================================================================================
+*                            PERIPHERAL REGISTER MAP ADDRESS STRUCTURE
+==================================================================================================*/
+/*---------------------------------------------------------------------------
+*                         GPIO-General-purpose-I/O
+-----------------------------------------------------------------------------*/
 
 /*
  * how to use : example with GPIOA
@@ -209,7 +233,39 @@ typedef struct
 #define GPIOJ        (GPIO_RegMap_t*)GPIOJ_BASEADDR
 #define GPIOK        (GPIO_RegMap_t*)GPIOK_BASEADDR
 
-/*********RCC-Reset and clock control***************/
+/*---------------------------------------------------------------------------
+*                   SPI- Serial peripheral interface
+-----------------------------------------------------------------------------*/
+
+/*
+ * Pheripheral register definition structure for SPI
+*/
+typedef struct
+{
+    volatile uint32_t SPI_CR1;                  // SPI control register 1
+    volatile uint32_t SPI_CR2;                  // SPI control register 2
+    volatile uint32_t SPI_SR;                   // SPI status register
+    volatile uint32_t SPI_DR;                   // SPI data register
+    volatile uint32_t SPI_CRCPR;                // SPI CRC polynomial register
+    volatile uint32_t SPI_RXCRCR;               // SPI RX CRC register
+    volatile uint32_t SPI_TXCRCR;               // SPI TX CRC register
+    volatile uint32_t SPI_I2SCFGR;              // SPI_I2S configuration register
+    volatile uint32_t SPI_I2SPR;                // SPI_I2S prescaler register
+}SPI_RegMap_t;
+
+/*
+ * SPIx Peripheral Base address cast to struct pointer type of SPIx
+ * now instead of :  SPI_RegMap_t *pSPI1 = (SPI_RegMap_t*)0x4001300OU
+ * you can use    :  SPI_RegMap_t *pSPI1 = SPI1
+ */
+#define SPI1        (SPI_RegMap_t*)SPI1_BASEADDR
+#define SPI2        (SPI_RegMap_t*)SPI2_BASEADDR
+#define SPI3        (SPI_RegMap_t*)SPI3_BASEADDR
+#define SPI4        (SPI_RegMap_t*)SPI4_BASEADDR
+
+/*---------------------------------------------------------------------------
+*                   RCC-Reset and clock control
+-----------------------------------------------------------------------------*/
 typedef struct
 {
     volatile uint32_t CR;                 // RCC clock control register
@@ -248,8 +304,9 @@ typedef struct
  */
 #define RCC           ((RCC_RegMap_t*)(RCC_BASEADDR))
 
-
-/*********CLOCK ENABLE - DISABLE - RESET***************/
+/*---------------------------------------------------------------------------
+*                   CLOCK ENABLE - DISABLE - RESET
+-----------------------------------------------------------------------------*/
 /*
  * Clock enable Marco for GPIOx peripheral
  */
@@ -361,7 +418,18 @@ typedef struct
 #define GPIOH_REG_RESET()         do {(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7)); }while(0)
 #define GPIOI_REG_RESET()         do {(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8)); }while(0)
 
-/*********EXTERNAL INTERRUPT/EVENT CONTROLLER***************/
+/*
+ * Reset SPIx Peripherals
+ * Reset by OR operator, then clear by AND to release it.
+ * Do ( do 1 time ) while (0)
+ */
+#define SPI1_REG_RESET()         do {(RCC->APB2RSTR |= (1 << 12)); (RCC->AHB1RSTR &= ~(1 << 12)); }while(0)
+#define SPI2_REG_RESET()         do {(RCC->APB1RSTR |= (1 << 14)); (RCC->AHB1RSTR &= ~(1 << 14)); }while(0)
+#define SPI3_REG_RESET()         do {(RCC->APB1RSTR |= (1 << 15)); (RCC->AHB1RSTR &= ~(1 << 15)); }while(0)
+
+/*---------------------------------------------------------------------------
+*                   EXTERNAL INTERRUPT/EVENT CONTROLLER
+-----------------------------------------------------------------------------*/
 typedef struct
 {
 	volatile uint32_t EXTI_IMR;               // Interrupt mask register
@@ -394,8 +462,9 @@ typedef struct
 #define IRQ_NO_EXTI9_5              23
 #define IRQ_NO_EXTI15_10            40
 
-
-/*********SYSTEM CONFIGURATION CONTROLLER (SYSCFG)***************/
+/*---------------------------------------------------------------------------
+*                   SYSTEM CONFIGURATION CONTROLLER (SYSCFG)
+-----------------------------------------------------------------------------*/
 typedef struct
 {
 	volatile uint32_t SYSCFG_MEMRMP;               // SYSCFG memory remap register
@@ -404,6 +473,7 @@ typedef struct
 	uint32_t RESERVED[2];                         // Reserved
 	volatile uint32_t SYSCFG_CMPCR;                // Compensation cell control register
 }SYSCFG_RegMap_t;
+
 /*
  * EXTI Peripheral Base address cast to struct pointer type of EXTI
  */
@@ -411,5 +481,6 @@ typedef struct
 
 
 #include "stm32f407xx_gpio.h"
+#include "stm32f407xx_spi.h"
 
 #endif /* INC_HUYPQ_STM32F407XX_H_ */
