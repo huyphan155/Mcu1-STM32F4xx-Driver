@@ -1,17 +1,75 @@
-/*
- * stm32f407xx_gpio.c
- *
- *  Created on: Mar 15, 2024
- *      Author: Huy Phan Quang
- */
+/*==================================================================================================
+*   Project              : MCU1 Driver for STM32F4xx
+*   Platform             : CORTEXM
+*   Peripheral           : PORT
+*
+*   SW Version           : 1.0.0
+*   Created on           : Mar, 2024
+*   Author               : Huy Phan Quang
+*
+==================================================================================================*/
+/**
+*   @file    stm32f407xx_gpio.c
+*
+*   @brief   GPIO low-level driver implementations.
+*   @details GPIO low-level driver implementations.
+*
+*/
 
+/*==================================================================================================
+*                                        INCLUDE FILES
+* 1) system and project includes
+* 2) needed interfaces from external units
+* 3) internal and external interfaces from this unit
+==================================================================================================*/
 #include "stm32f407xx_gpio.h"
 
+/*==================================================================================================
+*                          LOCAL TYPEDEFS (STRUCTURES, UNIONS, ENUMS)
+==================================================================================================*/
+/*==================================================================================================
+*                                       LOCAL MACROS
+==================================================================================================*/
+/*==================================================================================================
+*                                       LOCAL CONSTANTS
+==================================================================================================*/
+/*==================================================================================================
+*                                       LOCAL VARIABLES
+==================================================================================================*/
+/*==================================================================================================
+*                                      GLOBAL CONSTANTS
+==================================================================================================*/
+/*==================================================================================================
+                                    GLOBAL VARIABLES
+==================================================================================================*/
+/*==================================================================================================
+*                                    LOCAL FUNCTION PROTOTYPES
+==================================================================================================*/
+/*==================================================================================================
+*                                         LOCAL FUNCTIONS
+==================================================================================================*/
+/*==================================================================================================
+*                                        GLOBAL FUNCTIONS
+==================================================================================================*/
 
- /******************************************************************************************
- *								Peripheral Clock setup
- ******************************************************************************************/
-uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
+/*---------------------------------------------------------------------------
+*                         Peripheral Clock setup
+-----------------------------------------------------------------------------*/
+/**
+ * @brief       Control peripheral clock for a GPIO port
+ *
+ * @details     This function enables or disables the peripheral clock for a GPIO port.
+ *
+ * @param[in]   pGPIOx : hold the base address of GPIOx
+ * @param[in]   EnOrDI : Enable or disable operation, use ENABLE or DISABLE macros
+ *
+ * @return      GPIO_JobResultType
+ * @retval      GPIO_JOB_OK : The job has been finished successfully
+ * @retval      OTHER :  The job fail
+ *
+ * @Note
+ */
+GPIO_JobResultType GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	if(ENABLE == EnOrDI)
@@ -99,9 +157,9 @@ uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
 	return eLldRetVal;
 }
 
-/******************************************************************************************
- *								Init and De-init
- ******************************************************************************************/
+/*---------------------------------------------------------------------------
+*                         Init and De-init
+-----------------------------------------------------------------------------*/
 /**
  * @brief        GPIO init
  *
@@ -114,6 +172,7 @@ uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
  * @retval       OTHER :  The job fail
  *
  * @Note          step to Configure GPIO interrupt :
+ * 				  E0. pin must be in input mode.
  * 				  E1. Configure the edge trigger (RT,FT,RFT )
  * 				  E2. Enable interrupt delivery from peripheral to Processor (peripheral side )
  * 				  E3. Identify IRQ number which processor accepts the interrupt from that pin
@@ -122,7 +181,7 @@ uint8_t GPIO_PeriClockControl(GPIO_RegMap_t *pGPIOx, uint8_t EnOrDI)
  * 			      E6. Implement IRQ handler
  *
  */
-uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
+GPIO_JobResultType GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 {
 	uint32_t tempReg = 0U;
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
@@ -139,6 +198,7 @@ uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 	{
 		if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT)
 		{
+			//E0. pin must be in input mode.
 			//set as input mode 00
 			pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
 			// E1. Configure the edge trigger (FT)
@@ -230,7 +290,7 @@ uint8_t GPIO_Init(GPIO_Handle_t *pGPIOHandle)
  * @Note
  *
  */
-uint8_t GPIO_DeInit(GPIO_RegMap_t *pGPIOx)
+GPIO_JobResultType GPIO_DeInit(GPIO_RegMap_t *pGPIOx)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	if(pGPIOx == GPIOA)
@@ -272,9 +332,9 @@ uint8_t GPIO_DeInit(GPIO_RegMap_t *pGPIOx)
 	return eLldRetVal;
 }
 
-/******************************************************************************************
- *								Data read and write
- ******************************************************************************************/
+/*---------------------------------------------------------------------------
+*                         Data read and write
+-----------------------------------------------------------------------------*/
 /**
  * @brief        Reads the input data register (IDR) of a GPIO Pin
  *
@@ -336,7 +396,7 @@ uint16_t GPIO_ReadFromInputPort(GPIO_RegMap_t *pGPIOx)
  * @Note
  *
  */
-uint8_t GPIO_WriteToOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber, uint8_t value)
+GPIO_JobResultType GPIO_WriteToOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber, uint8_t value)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	if (value == GPIO_PIN_SET)
@@ -368,7 +428,7 @@ uint8_t GPIO_WriteToOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber, uint8_t 
  * @Note
  *
  */
-uint8_t GPIO_WriteToOutputPort(GPIO_RegMap_t *pGPIOx, uint16_t value)
+GPIO_JobResultType GPIO_WriteToOutputPort(GPIO_RegMap_t *pGPIOx, uint16_t value)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	pGPIOx->ODR = value;
@@ -391,16 +451,16 @@ uint8_t GPIO_WriteToOutputPort(GPIO_RegMap_t *pGPIOx, uint16_t value)
  * @Note
  *
  */
-uint8_t GPIO_ToggleOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber)
+GPIO_JobResultType GPIO_ToggleOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	pGPIOx->ODR ^= (1 << pinNumber );
 	return eLldRetVal;
 }
 
-/******************************************************************************************
- *								IRQ Configuration and ISR handling
- ******************************************************************************************/
+/*---------------------------------------------------------------------------
+*                        IRQ Configuration and ISR handling
+-----------------------------------------------------------------------------*/
 /**
  * @brief Configures the interrupt for a given IRQ number.
  *
@@ -416,7 +476,7 @@ uint8_t GPIO_ToggleOutputPin(GPIO_RegMap_t *pGPIOx, uint8_t pinNumber)
  * @note This function configures interrupt settings by programming NVIC ISER/ICER registers.
  * 		  E5. Enable interrupt reception on that IRQ number (processor side)
  */
-uint8_t GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDI)
+GPIO_JobResultType GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDI)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	if(EnOrDI == ENABLE)
@@ -470,7 +530,7 @@ uint8_t GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDI)
  * @note This function configures the priority of the IRQ by writing to NVIC IPR registers.
  *       E4. configure the IRQ priority for the identified IRQ number(processor side )
  */
-uint8_t GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
+GPIO_JobResultType GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	/*1. find out the ipr register of IRQNumber*/
@@ -499,7 +559,7 @@ uint8_t GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
  * @Note         E6. Implement IRQ handler
  *
  */
-uint8_t GPIO_IRQHandling(uint8_t pinNumber)
+GPIO_JobResultType GPIO_IRQHandling(uint8_t pinNumber)
 {
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 	//clear the exti PR register corresponding to the pin number
