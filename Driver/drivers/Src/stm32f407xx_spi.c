@@ -51,8 +51,23 @@
 /*==================================================================================================
 *                                        GLOBAL FUNCTIONS
 ==================================================================================================*/
-/*
- * Peripheral Clock setup
+
+/*---------------------------------------------------------------------------
+*                         Peripheral Clock setup
+-----------------------------------------------------------------------------*/
+/**
+ * @brief       Controls peripheral clock for SPI module.
+ *
+ * @details     This function enables or disables the peripheral clock for the specified SPI module.
+ *
+ * @param[in]   pSPIx  : hold the base address of pSPIx
+ * @param[in]   EnOrDI : Enable or disable operation, use ENABLE or DISABLE macros
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK : The job has been finished successfully.
+ * @retval      OTHER : The job failed.
+ *
+ * @note
  */
 Spi_JobResultType SPI_PeriClockControl(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
 {
@@ -94,21 +109,169 @@ Spi_JobResultType SPI_PeriClockControl(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
 	return eLldRetVal;
 }
 
-/*
- * Init and De-init
+/*---------------------------------------------------------------------------
+*                         Init and De-init
+-----------------------------------------------------------------------------*/
+/**
+ * @brief       Initialize the SPI module.
+ *
+ * @details     This function initializes the SPI module based on the provided configuration parameters.
+ * 				Such as mode, communication mode, clock speed, data frame format, clock polarity, clock phase, and software slave management
+ *
+ * @param[in]   pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
+ *
+ * @return      Spi_JobResultTyp
+ * @retval      SPI_JOB_OK: The SPI module has been initialized successfully.
+ * @retval      OTHER : The job failed.
+ *
+ * @note
  */
-Spi_JobResultType SPI_Init(SPI_Handle_t *pSPIHandle);
-Spi_JobResultType SPI_DeInit(SPI_RegMap_t *pSPIx);
 
-/*
- * Data Sent and Receive
+Spi_JobResultType SPI_Init(SPI_Handle_t *pSPIHandle)
+{
+	//refere to RM0090 28.5
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	// clear the SPI_CR1 register
+	pSPIHandle->pSPIx->SPI_CR1 = 0;
+	// 1. configure the mode of SPI
+	if(pSPIHandle->SPI_Config.SPI_DeviceMode == SPI_DEVICE_MODE_MASTER)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_MSTR);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_DeviceMode == SPI_DEVICE_MODE_SLAVE)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_MSTR);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	// 2. configure the communication mode of SPI
+	if(pSPIHandle->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_HD)
+	{
+		//BIDIMODE set
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_BIDIMODE);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_FD)
+	{
+		//BIDIMODE clear
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_BIDIMODE);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_SIMPLEX_RXONLY)
+	{
+		//BIDIMODE clear
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_BIDIMODE);
+		// RXONLY set
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_RXONLY);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	// 3. configure the clock speed
+	pSPIHandle->pSPIx->SPI_CR1 |= (pSPIHandle->SPI_Config.SPI_SclkSpeed<<3);
+	// 4. configure the data frame format
+	if(pSPIHandle->SPI_Config.SPI_DFF == SPI_DFF_8_BIT)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_DFF);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_DFF == SPI_DFF_16_BIT)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_DFF);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	// 5. Cpol configuration
+	if(pSPIHandle->SPI_Config.SPI_CPOL == SPI_CPOL_LOW)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_CPOL);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_CPOL == SPI_CPOL_HIGH)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_CPOL);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	// 6. Cpha configuration.
+	if(pSPIHandle->SPI_Config.SPI_CPHA == SPI_CPHA_LOW)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_CPHA);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_CPHA == SPI_CPHA_HIGH)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_CPHA);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	// 7. configure the Software slave management
+	if(pSPIHandle->SPI_Config.SPI_SSM == SPI_SSM_DI)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_SSM);
+	}
+	else if (pSPIHandle->SPI_Config.SPI_SSM == SPI_SSM_EN)
+	{
+		pSPIHandle->pSPIx->SPI_CR1 |= (1<<SPI_CR1_SSM);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	return eLldRetVal;
+}
+
+
+/**
+ * @brief       SPI modul De-init.
+ *
+ * @details     Reset SPI module by RCC register
+ *
+ * @param[in]   pSPIx  : hold the base address of pSPIx
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK : The job has been finished successfully.
+ * @retval      OTHER : The job failed.
+ *
+ * @note
  */
+Spi_JobResultType SPI_DeInit(SPI_RegMap_t *pSPIx)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	if(pSPIx == SPI1)
+	{
+		SPI1_REG_RESET();
+	}
+	else if(pSPIx == SPI2)
+	{
+		SPI2_REG_RESET();
+	}
+	else if(pSPIx == SPI3)
+	{
+		SPI3_REG_RESET();
+	}
+	return eLldRetVal;
+}
+
+/*---------------------------------------------------------------------------
+*                         Data Sent and Receive
+-----------------------------------------------------------------------------*/
 Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len);
 Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len);
 
-/*
- * IRQ Configuration and ISR handling
- */
+/*---------------------------------------------------------------------------
+*                        IRQ Configuration and ISR handling
+-----------------------------------------------------------------------------*/
 Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI);
 Spi_JobResultType SPI_IRQHandling(uint8_t pinNumber);
 Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
