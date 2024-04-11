@@ -45,9 +45,18 @@
 /*==================================================================================================
 *                                    LOCAL FUNCTION PROTOTYPES
 ==================================================================================================*/
+static uint8_t SPI_GetFlagStatus(SPI_RegMap_t *pSPIx, uint32_t FlagName);
 /*==================================================================================================
 *                                         LOCAL FUNCTIONS
 ==================================================================================================*/
+static uint8_t SPI_GetFlagStatus(SPI_RegMap_t *pSPIx, uint32_t FlagName)
+{
+	if(pSPIx->SPI_SR & FlagName) //bit mask
+	{
+		return SET;
+	}
+	return RESET;
+}
 /*==================================================================================================
 *                                        GLOBAL FUNCTIONS
 ==================================================================================================*/
@@ -233,11 +242,11 @@ Spi_JobResultType SPI_Init(SPI_Handle_t *pSPIHandle)
 
 
 /**
- * @brief       SPI modul De-init.
+ * @brief       SPI module De-init.
  *
  * @details     Reset SPI module by RCC register
  *
- * @param[in]   pSPIx  : hold the base address of pSPIx
+ * @param[in]   pSPIx  : Pointer to the SPI handle structure containing configuration parameters.
  *
  * @return      Spi_JobResultType.
  * @retval      SPI_JOB_OK : The job has been finished successfully.
@@ -266,7 +275,57 @@ Spi_JobResultType SPI_DeInit(SPI_RegMap_t *pSPIx)
 /*---------------------------------------------------------------------------
 *                         Data Sent and Receive
 -----------------------------------------------------------------------------*/
-Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len);
+/**
+ * @brief       Send data over SPI.
+ *
+ * @details     This function sends data over SPI by continuously transmitting data until the specified length is reached.
+ *              This function waits for the transmit buffer to be empty
+ *              before sending data and handles both 8-bit and 16-bit data transmission based on the configured data frame format (DFF).
+ *
+ * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
+ * @param[in]   pTxBuffer :  Pointer to the transmit buffer containing data to be sent.
+ * @param[in]   Len : Length of the data to be sent.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+
+Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	uint8_t FlagStatus = 0;
+	while(Len != 0U)
+	{
+		// wait until the Tx buffer is empty
+		FlagStatus = SPI_GetFlagStatus(pSPIx,(1 << SPI_SR_TXE));
+		if (SET == FlagStatus)
+		{
+			// check DFF to see the data is 8bit or 16bit
+			if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
+			{
+				// 16 bit DFF case
+				// load the data in to the DR
+				pSPIx->SPI_DR = *((uint16_t*)pTxBuffer); // type cast to uint16_t and get value
+				Len -= 2;
+				// increase to point to the next data
+				(uint16_t*)pTxBuffer++;
+			}
+			else
+			{
+				// 8 bit DFF case
+				pSPIx->SPI_DR = *pTxBuffer; // get value. No need  to type cast because pointer is uint8_t by default
+				Len--;
+				// increase to point to the next data
+				pTxBuffer++;
+			}
+		}
+
+	}
+	return eLldRetVal;
+}
 Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len);
 
 /*---------------------------------------------------------------------------
