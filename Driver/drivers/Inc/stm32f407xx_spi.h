@@ -42,7 +42,7 @@
  * @SPI_BusConfig
  */
 #define SPI_BUS_CONFIG_FD                  1       // full duplex
-#define SPI_BUS_CONFIG_FD                  2       // half duplex
+#define SPI_BUS_CONFIG_HD                  2       // half duplex
 #define SPI_BUS_CONFIG_SIMPLEX_RXONLY      3
 
 /*
