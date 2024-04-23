@@ -290,9 +290,8 @@ Spi_JobResultType SPI_DeInit(SPI_RegMap_t *pSPIx)
  * @retval      SPI_JOB_OK: Data transmission completed successfully.
  * @retval      OTHER : The job failed
  *
- * @note
+ * @note        Blocking function
  */
-
 Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len)
 {
 	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
@@ -307,7 +306,7 @@ Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, u
 			if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
 			{
 				// 16 bit DFF case
-				// load the data in to the DR
+				// load the data in to the DR ( data register )
 				pSPIx->SPI_DR = *((uint16_t*)pTxBuffer); // type cast to uint16_t and get value
 				Len -= 2;
 				// increase to point to the next data
@@ -326,7 +325,57 @@ Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, u
 	}
 	return eLldRetVal;
 }
-Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len);
+
+/**
+ * @brief       Receive data over SPI.
+ *
+ * @details     This function receive data over SPI by continuously reading the data until the specified length is reached.
+ *              This function waits for the receive buffer to be empty
+ *              before read data and handles both 8-bit and 16-bit data transmission based on the configured data frame format (DFF).
+ *
+ * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
+ * @param[in]   pTxBuffer :  Pointer to the transmit buffer containing data to be sent.
+ * @param[in]   Len : Length of the data to be sent.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note        Blocking function
+ */
+Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer, uint32_t Len)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	uint8_t FlagStatus = 0;
+	while(Len != 0U)
+	{
+		// wait until the Rx buffer is empty
+		FlagStatus = SPI_GetFlagStatus(pSPIx,(1 << SPI_SR_RXNE));
+		if (SET == FlagStatus)
+		{
+			// check DFF to see the data is 8bit or 16bit
+			if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
+			{
+				// 16 bit DFF case
+				// read the data from the DR ( data register )
+				*((uint16_t*)pRxBuffer) = pSPIx->SPI_DR; // type cast to uint16_t and get value
+				Len -= 2;
+				// increase to point to the next data
+				(uint16_t*)pRxBuffer++;
+			}
+			else
+			{
+				// 8 bit DFF case
+				*(pRxBuffer) = pSPIx->SPI_DR; // get value. No need  to type cast because pointer is uint8_t by default
+				Len--;
+				// increase to point to the next data
+				pRxBuffer++;
+			}
+		}
+
+	}
+	return eLldRetVal;
+}
 
 /*---------------------------------------------------------------------------
 *                        IRQ Configuration and ISR handling
