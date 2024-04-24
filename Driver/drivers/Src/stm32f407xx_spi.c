@@ -140,6 +140,10 @@ Spi_JobResultType SPI_Init(SPI_Handle_t *pSPIHandle)
 {
 	//refere to RM0090 28.5
 	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+
+	//peripheral clock enable
+	SPI_PeriClockControl(pSPIHandle->pSPIx, ENABLE);
+
 	// clear the SPI_CR1 register
 	pSPIHandle->pSPIx->SPI_CR1 = 0;
 	// 1. configure the mode of SPI
@@ -180,7 +184,7 @@ Spi_JobResultType SPI_Init(SPI_Handle_t *pSPIHandle)
 		eLldRetVal = SPI_JOB_FAILED;
 	}
 	// 3. configure the clock speed
-	pSPIHandle->pSPIx->SPI_CR1 |= (pSPIHandle->SPI_Config.SPI_SclkSpeed<<3);
+	pSPIHandle->pSPIx->SPI_CR1 |= (pSPIHandle->SPI_Config.SPI_SclkSpeed<<SPI_CR1_BR);
 	// 4. configure the data frame format
 	if(pSPIHandle->SPI_Config.SPI_DFF == SPI_DFF_8_BIT)
 	{

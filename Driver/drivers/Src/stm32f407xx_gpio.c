@@ -186,6 +186,9 @@ GPIO_JobResultType GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 	uint32_t tempReg = 0U;
 	GPIO_JobResultType eLldRetVal = GPIO_JOB_OK;
 
+	//peripheral clock enable
+	GPIO_PeriClockControl(pGPIOHandle->pGPIOx, ENABLE);
+
 	// 1. configure the mode of GPIO pin
 	if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG)
 	{
