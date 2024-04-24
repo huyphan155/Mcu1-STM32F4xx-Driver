@@ -298,28 +298,26 @@ Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, u
 	uint8_t FlagStatus = 0;
 	while(Len != 0U)
 	{
-		// wait until the Tx buffer is empty
 		FlagStatus = SPI_GetFlagStatus(pSPIx,(1 << SPI_SR_TXE));
-		if (SET == FlagStatus)
+		// wait until the Tx buffer is empty ( TXE is SET )
+		while (RESET == FlagStatus);
+		// check DFF to see the data is 8bit or 16bit
+		if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
 		{
-			// check DFF to see the data is 8bit or 16bit
-			if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
-			{
-				// 16 bit DFF case
-				// load the data in to the DR ( data register )
-				pSPIx->SPI_DR = *((uint16_t*)pTxBuffer); // type cast to uint16_t and get value
-				Len -= 2;
-				// increase to point to the next data
-				(uint16_t*)pTxBuffer++;
-			}
-			else
-			{
-				// 8 bit DFF case
-				pSPIx->SPI_DR = *pTxBuffer; // get value. No need  to type cast because pointer is uint8_t by default
-				Len--;
-				// increase to point to the next data
-				pTxBuffer++;
-			}
+			// 16 bit DFF case
+			// load the data in to the DR ( data register )
+			pSPIx->SPI_DR = *((uint16_t*)pTxBuffer); // type cast to uint16_t and get value
+			Len -= 2;
+			// increase to point to the next data
+			(uint16_t*)pTxBuffer++;
+		}
+		else
+		{
+			// 8 bit DFF case
+			pSPIx->SPI_DR = *pTxBuffer; // get value. No need  to type cast because pointer is uint8_t by default
+			Len--;
+			// increase to point to the next data
+			pTxBuffer++;
 		}
 
 	}
@@ -349,30 +347,27 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer
 	uint8_t FlagStatus = 0;
 	while(Len != 0U)
 	{
-		// wait until the Rx buffer is empty
 		FlagStatus = SPI_GetFlagStatus(pSPIx,(1 << SPI_SR_RXNE));
-		if (SET == FlagStatus)
+		// wait until the Rx buffer is empty (RXNE is set )
+		while (RESET == FlagStatus);
+		// check DFF to see the data is 8bit or 16bit
+		if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
 		{
-			// check DFF to see the data is 8bit or 16bit
-			if (pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
-			{
-				// 16 bit DFF case
-				// read the data from the DR ( data register )
-				*((uint16_t*)pRxBuffer) = pSPIx->SPI_DR; // type cast to uint16_t and get value
-				Len -= 2;
-				// increase to point to the next data
-				(uint16_t*)pRxBuffer++;
-			}
-			else
-			{
-				// 8 bit DFF case
-				*(pRxBuffer) = pSPIx->SPI_DR; // get value. No need  to type cast because pointer is uint8_t by default
-				Len--;
-				// increase to point to the next data
-				pRxBuffer++;
-			}
+			// 16 bit DFF case
+			// read the data from the DR ( data register )
+			*((uint16_t*)pRxBuffer) = pSPIx->SPI_DR; // type cast to uint16_t and get value
+			Len -= 2;
+			// increase to point to the next data
+			(uint16_t*)pRxBuffer++;
 		}
-
+		else
+		{
+			// 8 bit DFF case
+			*(pRxBuffer) = pSPIx->SPI_DR; // get value. No need  to type cast because pointer is uint8_t by default
+			Len--;
+			// increase to point to the next data
+			pRxBuffer++;
+		}
 	}
 	return eLldRetVal;
 }
