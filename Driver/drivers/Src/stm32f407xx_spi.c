@@ -382,3 +382,39 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer
 Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI);
 Spi_JobResultType SPI_IRQHandling(uint8_t pinNumber);
 Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
+
+/*---------------------------------------------------------------------------
+*                        Other Peripheral Control APIS
+-----------------------------------------------------------------------------*/
+/**
+ * @brief       SPI_PeripheralControl
+ *
+ * @details     enable or disable specific SPI peripheral
+ *
+ * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
+ * @param[in]   EnOrDI : Enable or disable operation, use ENABLE or DISABLE macros
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_PeripheralControl(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	if(EnOrDI == ENABLE)
+	{
+		pSPIx->SPI_CR1 |= (1<<SPI_CR1_SPE);
+	}
+	else if(EnOrDI == DISABLE)
+	{
+		pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_SPE);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	return eLldRetVal;
+}
