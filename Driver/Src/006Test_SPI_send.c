@@ -75,6 +75,10 @@ int main(void)
 	//This function is used to initialize the SPI2 peripheral parameters
 	SPI2_Inits();
 
+	//enable the SPI2 peripheral
+	SPI_PeripheralControl(SPI2,ENABLE);
+
+	//sent data
 	SPI_SentData(SPI2, (uint8_t*)user_data, strlen(user_data));
 
 	while(1);
