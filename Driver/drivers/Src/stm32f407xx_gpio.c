@@ -199,11 +199,12 @@ GPIO_JobResultType GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 	}
 	else // interrupt mode
 	{
+		//E0. pin must be in input mode.
+		//set as input mode 00
+		pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
+
 		if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT)
 		{
-			//E0. pin must be in input mode.
-			//set as input mode 00
-			pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (2*pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
 			// E1. Configure the edge trigger (FT)
 			EXTI->EXTI_FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
 			EXTI->EXTI_RTSR &= ~(1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); //disable RT
@@ -211,10 +212,14 @@ GPIO_JobResultType GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 		else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT)
 		{
 			// E1. Configure the edge trigger (RT)
+			EXTI->EXTI_RTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+			EXTI->EXTI_FTSR &= ~(1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); //disable FT
 		}
 		else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
 		{
 			// E1. Configure the edge trigger (RFT)
+			EXTI->EXTI_FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+			EXTI->EXTI_RTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); // enable both RT & FT
 		}
 		// Configure the GPIO port selection in SYSCFG
 		uint8_t temp1 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber/4; //get the right SYSCFG_EXTICRx register
@@ -560,6 +565,8 @@ GPIO_JobResultType GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
  * @retval       OTHER :  The job fail
  *
  * @Note         E6. Implement IRQ handler
+ *               IRQ handle should be implement in application code,
+ *               and call to this function form main.c.
  *
  */
 GPIO_JobResultType GPIO_IRQHandling(uint8_t pinNumber)
