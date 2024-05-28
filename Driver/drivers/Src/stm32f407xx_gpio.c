@@ -557,6 +557,8 @@ GPIO_JobResultType GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
  * @brief        GPIO IRQ handling
  *
  * @details      Clears the pending interrupt flag corresponding to the specified pin number.
+ *               Because when an interrupt request is generated. The pending bit corresponding to the interrupt line is also set (in PR register ).
+ *               You need to reset by writing a ‘1’ in the pending register
  *
  * @param[in]    pinNumber : pin number
  *
@@ -564,7 +566,7 @@ GPIO_JobResultType GPIO_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
  * @retval       GPIO_JOB_OK : The job has been finished successfully
  * @retval       OTHER :  The job fail
  *
- * @Note         E6. Implement IRQ handler
+ * @Note         E6. Implement IRQ handler ( clear PR register )
  *               IRQ handle should be implement in application code,
  *               and call to this function form main.c.
  *
