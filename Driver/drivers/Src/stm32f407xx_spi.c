@@ -419,3 +419,39 @@ Spi_JobResultType SPI_PeripheralControl(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
 	}
 	return eLldRetVal;
 }
+
+/**
+ * @brief       SPI_SSIConfig
+ *
+ * @details     Enable or Disable SSI: Internal slave select.
+ *              This bit has an effect only when the SSM bit is set. The value of this bit is forced onto the
+ *              NSS pin and the IO value of the NSS pin is ignored.
+ *              If SP_SSM (Software slave management) is enable, must enable this bit to avoid MODF error
+ *
+ * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
+ * @param[in]   EnOrDI : Enable or disable operation, use ENABLE or DISABLE macros
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_SSIConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	if(EnOrDI == ENABLE)
+	{
+		pSPIx->SPI_CR1 |= (1<<SPI_CR1_SSI);
+	}
+	else if(EnOrDI == DISABLE)
+	{
+		pSPIx->SPI_CR1 &= ~(1<<SPI_CR1_SSI);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	return eLldRetVal;
+}

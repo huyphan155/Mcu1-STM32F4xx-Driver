@@ -161,5 +161,6 @@ Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
  * Other Peripheral Control APIS
  */
 Spi_JobResultType SPI_PeripheralControl(SPI_RegMap_t *pSPIx, uint8_t EnOrDI);
+Spi_JobResultType SPI_SSIConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI);
 
 #endif /* INC_STM32F407XX_SPI_H_ */
