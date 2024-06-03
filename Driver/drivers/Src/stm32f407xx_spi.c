@@ -389,7 +389,8 @@ Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
 /**
  * @brief       SPI_PeripheralControl
  *
- * @details     enable or disable specific SPI peripheral
+ * @details     In order to use SPI peripheral, beside enable peripheral clock (RCC)
+ *              SPE bit is also need to be set/clear to enable or disable specific SPI peripheral
  *
  * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
  * @param[in]   EnOrDI : Enable or disable operation, use ENABLE or DISABLE macros
