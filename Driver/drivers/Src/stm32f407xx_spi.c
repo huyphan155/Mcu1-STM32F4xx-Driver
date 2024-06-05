@@ -455,3 +455,43 @@ Spi_JobResultType SPI_SSIConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
 	}
 	return eLldRetVal;
 }
+
+/**
+ * @brief       SPI_SSOEConfig
+ *
+ * @details     Enable or Disable SSOE :SS output enable.
+ * 				If SP_SSM (Software slave management) is disable - aka Hardware slave management
+ * 				enable SSOE if the device operates in master mode.
+ * 				The NSS signal is driven low when the master starts the communication and is kept low until the SPI is disabled.
+ *
+ *                  0: SS output is disabled in master mode and the cell can work in multimaster configuration
+ *                  1: SS output is enabled in master mode and when the cell is enabled. The cell cannot work
+ *                  in a multimaster environment
+ *
+ * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
+ * @param[in]   EnOrDI : Enable or disable operation, use ENABLE or DISABLE macros
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_SSOEConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	if(EnOrDI == ENABLE)
+	{
+		pSPIx->SPI_CR2 |= (1<<SPI_CR2_SSOE);
+	}
+	else if(EnOrDI == DISABLE)
+	{
+		pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_SSOE);
+	}
+	else
+	{
+		// should not enter here
+		eLldRetVal = SPI_JOB_FAILED;
+	}
+	return eLldRetVal;
+}

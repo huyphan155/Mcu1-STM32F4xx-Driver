@@ -58,7 +58,7 @@ void SPI2_Inits()
 	SPI2Handle.SPI_Config.SPI_CPOL = SPI_CPOL_LOW;
 	SPI2Handle.SPI_Config.SPI_DFF = SPI_DFF_8_BIT;
 	SPI2Handle.SPI_Config.SPI_DeviceMode = SPI_DEVICE_MODE_MASTER;
-	SPI2Handle.SPI_Config.SPI_SSM = SPI_SSM_EN;
+	SPI2Handle.SPI_Config.SPI_SSM = SPI_SSM_EN; // software slave management enable
 	SPI2Handle.SPI_Config.SPI_SclkSpeed = SPI_SCLK_SPEED_DIV2; // generate sclk of 8MHZ
 
 	SPI_Init(&SPI2Handle);
@@ -78,11 +78,14 @@ int main(void)
 	//SPI_SSM is enable, so enable SSI to avoid MODF error
 	SPI_SSIConfig(SPI2,ENABLE);
 
-	//enable the SPI2 peripheral
+	//enable the SPI2 peripheral : Enable SPI_CR1_SPE bit
 	SPI_PeripheralControl(SPI2,ENABLE);
 
 	//sent data
 	SPI_SentData(SPI2, (uint8_t*)user_data, strlen(user_data));
+
+	// wait for the data is finish sending : TBD
+	//while (	(SPI_GetFlagStatus(SPI2,(1 << SPI_SR_BSY)) );
 
 	//disable the SPI2 peripheral when finish sending the data
 	SPI_PeripheralControl(SPI2,ENABLE);
