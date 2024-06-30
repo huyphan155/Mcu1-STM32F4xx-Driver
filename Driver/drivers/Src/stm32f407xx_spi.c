@@ -372,9 +372,104 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer
 /*---------------------------------------------------------------------------
 *                        IRQ Configuration and ISR handling
 -----------------------------------------------------------------------------*/
-Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI);
+/**
+ * @brief     Configures the interrupt for a given IRQ number.
+ *
+ * @details   Enables or disables the interrupt based on the provided parameters.
+ *
+ * @param[in] IRQNumber : The IRQ number to configure.
+ * @param[in] EnOrDI    : Specifies whether to enable or disable the interrupt (ENABLE or DISABLE).
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	if(EnOrDI == ENABLE)
+	{
+		if(IRQNumber <= 31)
+		{
+			//program ISER0 register
+			*NVIC_ISER0 |= ( 1 << IRQNumber );
+		}else if(IRQNumber > 31 && IRQNumber < 64 ) //32 to 63
+		{
+			//program ISER1 register
+			*NVIC_ISER1 |= ( 1 << (IRQNumber % 32) );
+		}
+		else if(IRQNumber >= 64 && IRQNumber < 96 )
+		{
+			//program ISER2 register //64 to 95
+			*NVIC_ISER2 |= ( 1 << (IRQNumber % 64) );
+		}
+	}else
+	{
+		if(IRQNumber <= 31)
+		{
+			//program ICER0 register
+			*NVIC_ICER0 |= ( 1 << IRQNumber );
+		}else if(IRQNumber > 31 && IRQNumber < 64 )
+		{
+			//program ICER1 register
+			*NVIC_ICER1 |= ( 1 << (IRQNumber % 32) );
+		}
+		else if(IRQNumber >= 64 && IRQNumber < 96 )
+		{
+			//program ICER2 register
+			*NVIC_ICER2 |= ( 1 << (IRQNumber % 64) );
+		}
+	}
+	return eLldRetVal;
+}
+
+/**
+ * @brief     Configures the priority for a given IRQ number.
+ *
+ * @details   Sets the priority level for the specified IRQ.
+ *
+ * @param[in] IRQNumber   :    The IRQ number to configure.
+ * @param[in] IRQPriority :  The priority level for the IRQ.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+	/*1. find out the ipr register of IRQNumber*/
+	uint8_t iprx = IRQNumber / 4 ;
+	/*2. tim ra field(8 bit) quy dinh priority cua loai IRQ*/
+	uint8_t iprx_section = IRQNumber % 4;
+
+	uint8_t shift_amount = (8*iprx_section) + (8 - NUM_PR_BITS_IMPLEMENTED);
+
+	/*con tro kieu uint32 nen chi can + iprx de ra duoc dia chi thanh ghi*/
+	*(NVIC_IPR_BASEADDR + iprx) |= ( IRQPriority << shift_amount);
+	return eLldRetVal;
+}
+
+/**
+ * @brief        SPI IRQ handling
+ *
+ * @details      Clears the pending interrupt flag corresponding to the specified pin number.
+ *               Because when an interrupt request is generated. The pending bit corresponding to the interrupt line is also set (in PR register ).
+ *               You need to reset by writing a ‘1’ in the pending register
+ *
+ * @param[in]    pinNumber : pin number
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
 Spi_JobResultType SPI_IRQHandling(uint8_t pinNumber);
-Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
 
 /*---------------------------------------------------------------------------
 *                        Peripheral Status Check APIS
