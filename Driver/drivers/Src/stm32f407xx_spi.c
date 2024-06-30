@@ -45,18 +45,11 @@
 /*==================================================================================================
 *                                    LOCAL FUNCTION PROTOTYPES
 ==================================================================================================*/
-static uint8_t SPI_GetFlagStatus(SPI_RegMap_t *pSPIx, uint32_t FlagName);
+
 /*==================================================================================================
 *                                         LOCAL FUNCTIONS
 ==================================================================================================*/
-static uint8_t SPI_GetFlagStatus(SPI_RegMap_t *pSPIx, uint32_t FlagName)
-{
-	if(pSPIx->SPI_SR & FlagName) //bit mask
-	{
-		return SET;
-	}
-	return RESET;
-}
+
 /*==================================================================================================
 *                                        GLOBAL FUNCTIONS
 ==================================================================================================*/
@@ -383,6 +376,17 @@ Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI);
 Spi_JobResultType SPI_IRQHandling(uint8_t pinNumber);
 Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
 
+/*---------------------------------------------------------------------------
+*                        Peripheral Status Check APIS
+-----------------------------------------------------------------------------*/
+uint8_t SPI_GetFlagStatus(SPI_RegMap_t *pSPIx, uint32_t FlagName)
+{
+	if(pSPIx->SPI_SR & FlagName) //bit mask
+	{
+		return SET;
+	}
+	return RESET;
+}
 /*---------------------------------------------------------------------------
 *                        Other Peripheral Control APIS
 -----------------------------------------------------------------------------*/
