@@ -111,14 +111,21 @@ int main(void)
 		//wait till button is pressed
 		while(! GPIO_ReadFromInputPin(GPIOD, GPIO_PIN_NO_5));
 
+		//to avoid button de-bouncing related issues 200ms of delay
+		delay();
+
 		//enable the SPI2 peripheral : Enable SPI_CR1_SPE bit
 		SPI_PeripheralControl(SPI2,ENABLE);
+
+		//first send length information
+		uint8_t dataLen = strlen(user_data);
+		SPI_SendData(SPI2,&dataLen,1);
 
 		//sent data
 		SPI_SentData(SPI2, (uint8_t*)user_data, strlen(user_data));
 
-		// wait for the data is finish sending : TBD
-		//while (	(SPI_GetFlagStatus(SPI2,(1 << SPI_SR_BSY)) );
+		// wait for the data is finish sending : check the busy flag status
+		while (	SPI_GetFlagStatus(SPI2,(1 << SPI_SR_BSY)));
 
 		//disable the SPI2 peripheral when finish sending the data
 		SPI_PeripheralControl(SPI2,ENABLE);
