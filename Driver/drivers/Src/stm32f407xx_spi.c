@@ -45,11 +45,105 @@
 /*==================================================================================================
 *                                    LOCAL FUNCTION PROTOTYPES
 ==================================================================================================*/
-
+static void  spi_txe_interrupt_handle(SPI_Handle_t *pSPIHandle);
+static void  spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle);
+static void  spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle);
 /*==================================================================================================
 *                                         LOCAL FUNCTIONS
 ==================================================================================================*/
+/**
+*   @func     spi_txe_interrupt_handle.c
+*
+*   @brief    handler for spi tx transmit data
+*   @details  same as SPI_SentData, send call back func to application when finish
+*
+*/
+static void  spi_txe_interrupt_handle(SPI_Handle_t *pSPIHandle)
+{
+	while(pSPIHandle->TxLen != 0U)
+	{
+		// check DFF to see the data is 8bit or 16bit
+		if (pSPIHandle->pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
+		{
+			// 16 bit DFF case
+			// load the data in to the DR ( data register )
+			pSPIHandle->pSPIx->SPI_DR = *((uint16_t*)pSPIHandle->pTxBuffer); // type cast to uint16_t and get value
+			pSPIHandle->TxLen -= 2;
+			// increase to point to the next data
+			(uint16_t*)pSPIHandle->pTxBuffer++;
+		}
+		else
+		{
+			// 8 bit DFF case
+			pSPIHandle->pSPIx->SPI_DR = *pSPIHandle->pTxBuffer; // get value. No need  to type cast because pointer is uint8_t by default
+			pSPIHandle->TxLen--;
+			// increase to point to the next data
+			pSPIHandle->pTxBuffer++;;
+		}
+		// check if pSPIHandle->TxLen is zero
+		if(! pSPIHandle->TxLen)
+		{
+			//TxLen is zero , so close the spi transmission and inform the application that
+			//TX is over.
 
+			//this prevents interrupts from setting up of TXE flag
+			pSPIHandle->pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_TXEIE); // disable interrupt generation
+			pSPIHandle->TxLen = 0;
+			pSPIHandle->pTxBuffer = NULL;
+			pSPIHandle->TxState = SPI_READY;
+			// send call back function to the application to inform that TX is over
+			//SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_TX_CMPLT);
+		}
+	}
+}
+
+/**
+*   @func     spi_rxne_interrupt_handle.c
+*
+*   @brief    handler for spi rx transmit data
+*   @details  same as SPI_ReceiveData, send call back func to application when finish
+*
+*/
+static void  spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle)
+{
+	while(pSPIHandle->RxLen != 0U)
+	{
+		// check DFF to see the data is 8bit or 16bit
+		if (pSPIHandle->pSPIx->SPI_CR1 & (1 << SPI_CR1_DFF))
+		{
+			// 16 bit DFF case
+			// read the data from the DR ( data register )
+			*((uint16_t*)pSPIHandle->pRxBuffer) = pSPIHandle->pSPIx->SPI_DR; // type cast to uint16_t and get value
+			pSPIHandle->RxLen -= 2;
+			// increase to point to the next data
+			(uint16_t*)pSPIHandle->pRxBuffer++;
+		}
+		else
+		{
+			// 8 bit DFF case
+			*(pSPIHandle->pRxBuffer) = pSPIHandle->pSPIx->SPI_DR; // get value. No need  to type cast because pointer is uint8_t by default
+			pSPIHandle->RxLen--;
+			// increase to point to the next data
+			pSPIHandle->pRxBuffer++;
+		}
+		// check if pSPIHandle->TxLen is zero
+		if(! pSPIHandle->RxLen)
+		{
+			//RxLen is zero , so close the spi transmission and inform the application that
+			//RX is over.
+
+			//this prevents interrupts from setting up of RXNE flag
+			pSPIHandle->pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_RXNEIE); // disable interrupt generation
+			pSPIHandle->TxLen = 0;
+			pSPIHandle->pTxBuffer = NULL;
+			pSPIHandle->TxState = SPI_READY;
+			// send call back function to the application to inform that RX is over
+			//SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_TX_CMPLT);
+		}
+	}
+}
+
+static void  spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle);
 /*==================================================================================================
 *                                        GLOBAL FUNCTIONS
 ==================================================================================================*/
@@ -374,17 +468,16 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer
 /**
  * @brief       Sent data over SPI in Interrupt
  *
- * @details
+ * @details     Store parameter to SPI_Handle,
+ *              Enable the TXEIE control bit to get interrupt whenever TXE flag is set in SR
  *
- *
- *
- * @param[in]
+ * @param[in]   pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
  * @param[in]   pTxBuffer :  Pointer to the transmit buffer containing data to be sent.
  * @param[in]   Len : Length of the data to be sent.
  *
- * @return      Spi_JobResultType.
- * @retval      SPI_JOB_OK: Data transmission completed successfully.
- * @retval      OTHER : The job failed
+ * @return      state.
+ * @retval      SPI_BUSY_IN_TX: Data transmission busy.
+ * @retval
  *
  * @note       Not write data to the data register inside this function, interrupt handle will do that.
  */
@@ -405,6 +498,23 @@ uint8_t SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint
 	return state;
 
 }
+
+/**
+ * @brief       Receive data over SPI in Interrupt
+ *
+ * @details     Store parameter to SPI_Handle,
+ *              Enable the RXNEIE control bit to get interrupt whenever RXNEIE flag is set
+ *
+ * @param[in]   pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
+ * @param[in]   pRxBuffer :  Pointer to the transmit buffer containing data to be receive.
+ * @param[in]   Len : Length of the data to be receive.
+ *
+ * @return      state.
+ * @retval      SPI_BUSY_IN_RX: Data transmission busy.
+ * @retval
+ *
+ * @note       Not write data to the data register inside this function, interrupt handle will do that.
+ */
 uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pRxBuffer, uint32_t Len)
 {
 	uint8_t state = pSPIHandle->RxState;
@@ -510,19 +620,56 @@ Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority)
 /**
  * @brief        SPI IRQ handling
  *
- * @details      Clears the pending interrupt flag corresponding to the specified pin number.
- *               Because when an interrupt request is generated. The pending bit corresponding to the interrupt line is also set (in PR register ).
- *               You need to reset by writing a ‘1’ in the pending register
+ * @details      Check what event is cause the interrupt, then direct to the corresponding function
  *
- * @param[in]    pinNumber : pin number
+ * @param[in]    pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
  *
- * @return      Spi_JobResultType.
- * @retval      SPI_JOB_OK: Data transmission completed successfully.
- * @retval      OTHER : The job failed
+ * @return       Spi_JobResultType.
+ * @retval       SPI_JOB_OK: Data transmission completed successfully.
+ * @retval       OTHER : The job failed
  *
  * @note
  */
-Spi_JobResultType SPI_IRQHandling(uint8_t pinNumber);
+Spi_JobResultType SPI_IRQHandling(SPI_Handle_t *pSPIHandle)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_FAILED;
+	if( ((pSPIHandle->pSPIx->SPI_SR) & ( 1 << SPI_SR_TXE)) &&((pSPIHandle->pSPIx->SPI_CR2)&(1 << SPI_CR2_TXEIE)) )
+	{
+		// flag TXE is enable in Status register and TXEIE is enable in Control register ( enable interrupt )
+		// interrupt occur because of TXE
+		spi_txe_interrupt_handle(pSPIHandle);
+		eLldRetVal = SPI_JOB_OK;
+	}
+	if( ((pSPIHandle->pSPIx->SPI_SR) & ( 1 << SPI_SR_RXNE)) &&((pSPIHandle->pSPIx->SPI_CR2)&(1 << SPI_CR2_RXNEIE)) )
+	{
+		// interrupt occur because of RXNE
+		spi_rxne_interrupt_handle(pSPIHandle);
+		eLldRetVal = SPI_JOB_OK;
+	}
+	if( ((pSPIHandle->pSPIx->SPI_SR) & ( 1 << SPI_SR_MODF)) &&((pSPIHandle->pSPIx->SPI_CR2)&(1 << SPI_CR2_ERRIE)) )
+	{
+		// interrupt occur because of MODF
+		// TBD
+	}
+	if( ((pSPIHandle->pSPIx->SPI_SR) & ( 1 << SPI_SR_OVR)) &&((pSPIHandle->pSPIx->SPI_CR2)&(1 << SPI_CR2_ERRIE)) )
+	{
+		// interrupt occur because of OVR
+		spi_ovr_err_interrupt_handle(pSPIHandle);
+		eLldRetVal = SPI_JOB_OK;
+
+	}
+	if( ((pSPIHandle->pSPIx->SPI_SR) & ( 1 << SPI_SR_CRCERR)) &&((pSPIHandle->pSPIx->SPI_CR2)&(1 << SPI_CR2_ERRIE)) )
+	{
+		// interrupt occur because of CRCERR
+		// TBD
+	}
+	if( ((pSPIHandle->pSPIx->SPI_SR) & ( 1 << SPI_SR_FRE)) &&((pSPIHandle->pSPIx->SPI_CR2)&(1 << SPI_CR2_ERRIE)) )
+	{
+		// interrupt occur because of FRE
+		// TBD
+	}
+	return eLldRetVal;
+}
 
 /*---------------------------------------------------------------------------
 *                        Peripheral Status Check APIS

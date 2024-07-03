@@ -168,7 +168,7 @@ uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pRxBuffer, u
  * IRQ Configuration and ISR handling
  */
 Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI);
-Spi_JobResultType SPI_IRQHandling(uint8_t pinNumber);
+Spi_JobResultType SPI_IRQHandling(SPI_Handle_t *pSPIHandle);
 Spi_JobResultType SPI_IRQPriorityConfig(uint8_t IRQNumber,uint8_t IRQPriority);
 
 /*

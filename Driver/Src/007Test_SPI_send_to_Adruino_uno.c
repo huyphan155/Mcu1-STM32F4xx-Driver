@@ -119,7 +119,7 @@ int main(void)
 
 		//first send length information
 		uint8_t dataLen = strlen(user_data);
-		SPI_SendData(SPI2,&dataLen,1);
+		SPI_SentData(SPI2,&dataLen,1);
 
 		//sent data
 		SPI_SentData(SPI2, (uint8_t*)user_data, strlen(user_data));

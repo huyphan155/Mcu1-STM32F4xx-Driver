@@ -20,6 +20,7 @@
 #define INC_HUYPQ_STM32F407XX_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 /*==================================================================================================
 *                             Processor Specific Details : ARM_CORTEX M4
