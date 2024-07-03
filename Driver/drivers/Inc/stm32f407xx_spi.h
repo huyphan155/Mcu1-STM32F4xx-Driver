@@ -84,6 +84,9 @@
 /*==================================================================================================
 *                                      DEFINES AND MACROS
 ==================================================================================================*/
+#define          SPI_READY                 0
+#define          SPI_BUSY_IN_RX            1
+#define          SPI_BUSY_IN_TX            2
 
 /*==================================================================================================
 *                                            ENUMS
@@ -121,8 +124,14 @@ typedef struct
  */
 typedef struct
 {
-	SPI_RegMap_t *pSPIx;     // hold the base address of SPIx  peripheral
-	SPI_Config_t SPI_Config; // Hold SPIx configuration setting
+	SPI_RegMap_t    *pSPIx;         // hold the base address of SPIx  peripheral
+	SPI_Config_t     SPI_Config;    // Hold SPIx configuration setting
+	Spi_BufferSize  *pTxBuffer;     // Store the app Tx buffer address
+	Spi_BufferSize  *pRxBuffer;     // Store the app Rx buffer address
+	uint32_t         TxLen;         // Store Tx len
+	uint32_t         RxLen;         // Store Rx len
+	uint8_t          TxState;       // Store the Tx state
+	uint8_t          RxState;       // Store the Rx state
 }SPI_Handle_t;
 
 /*==================================================================================================
@@ -152,8 +161,8 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer
 /*
  * Data Sent and Receive in Interrupt
  */
-Spi_JobResultType SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len);
-Spi_JobResultType SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len);
+uint8_t SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len);
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pRxBuffer, uint32_t Len);
 
 /*
  * IRQ Configuration and ISR handling

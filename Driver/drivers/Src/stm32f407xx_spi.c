@@ -388,19 +388,38 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer
  *
  * @note       Not write data to the data register inside this function, interrupt handle will do that.
  */
-Spi_JobResultType SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len)
+uint8_t SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len)
 {
-	// 1. Save the Tx buffer address and Len information in some global var
-	//2.  Mark the SPI state as busy in transmission so that
-	//    no other code can take over same SPI peripheral until transmission is over
-	//3. Enable the TXEIE control bit to get interrupt whenever TXE flag is set in SR
+	uint8_t state = pSPIHandle->TxState;
+	if(state != SPI_BUSY_IN_TX)
+	{
+		// 1. Save the Tx buffer address and Len information in some global var
+		pSPIHandle->pTxBuffer = pTxBuffer;
+		pSPIHandle->TxLen = Len;
+		//2.  Mark the SPI state as busy in transmission so that
+		//    no other code can take over same SPI peripheral until transmission is over
+		pSPIHandle->TxState = SPI_BUSY_IN_TX;
+		//3. Enable the TXEIE control bit to get interrupt whenever TXE flag is set in SR
+		pSPIHandle->pSPIx->SPI_CR2 |= (1<<SPI_CR2_TXEIE);
+	}
+	return state;
+
 }
-Spi_JobResultType SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len)
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pRxBuffer, uint32_t Len)
 {
-	//1 . Save the Rx buffer address and Len information in some global variables
-	//2.  Mark the SPI state as busy in reception so that
-	//    no other code can take over same SPI peripheral until reception is over
-	//3. Enable the RXNEIE control bit to get interrupt whenever RXNEIE flag is set in SR
+	uint8_t state = pSPIHandle->RxState;
+	if(state != SPI_BUSY_IN_RX)
+	{
+		//1 . Save the Rx buffer address and Len information in some global variables
+		pSPIHandle->pRxBuffer = pRxBuffer;
+		pSPIHandle->RxLen = Len;
+		//2.  Mark the SPI state as busy in reception so that
+		//    no other code can take over same SPI peripheral until reception is over
+		pSPIHandle->RxState = SPI_BUSY_IN_RX;
+		//3. Enable the RXNEIE control bit to get interrupt whenever RXNEIE flag is set in SR
+		pSPIHandle->pSPIx->SPI_CR2 |= (1<<SPI_CR2_RXNEIE);
+	}
+	return state;
 }
 
 /*---------------------------------------------------------------------------
