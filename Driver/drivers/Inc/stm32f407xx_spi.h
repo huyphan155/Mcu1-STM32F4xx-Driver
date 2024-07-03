@@ -84,9 +84,20 @@
 /*==================================================================================================
 *                                      DEFINES AND MACROS
 ==================================================================================================*/
+/*
+ * SPI application states
+ */
 #define          SPI_READY                 0
 #define          SPI_BUSY_IN_RX            1
 #define          SPI_BUSY_IN_TX            2
+
+/*
+ * SPI application event
+ */
+#define          SPI_EVENT_RX_CMPLT        1         // Rx transmission complete
+#define          SPI_EVENT_TX_CMPLT        2         // Tx transmission complete
+#define          SPI_EVENT_OVR_ERR         3         // Overrun error
+#define          SPI_EVENT_CRC_ERR         4         // CRC error
 
 /*==================================================================================================
 *                                            ENUMS
@@ -182,5 +193,14 @@ uint8_t SPI_GetFlagStatus(SPI_RegMap_t *pSPIx, uint32_t FlagName);
 Spi_JobResultType SPI_PeripheralControl(SPI_RegMap_t *pSPIx, uint8_t EnOrDI);
 Spi_JobResultType SPI_SSIConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI);
 Spi_JobResultType SPI_SSOEConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI);
+
+Spi_JobResultType SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle);
+Spi_JobResultType SPI_CloseTransmisson(SPI_Handle_t *pSPIHandle);
+Spi_JobResultType SPI_CloseReception(SPI_Handle_t *pSPIHandle);
+
+/*
+ * Application callback function
+ */
+void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle,uint8_t AppEvent);
 
 #endif /* INC_STM32F407XX_SPI_H_ */

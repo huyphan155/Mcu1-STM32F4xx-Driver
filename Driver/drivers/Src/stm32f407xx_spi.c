@@ -87,12 +87,9 @@ static void  spi_txe_interrupt_handle(SPI_Handle_t *pSPIHandle)
 			//TX is over.
 
 			//this prevents interrupts from setting up of TXE flag
-			pSPIHandle->pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_TXEIE); // disable interrupt generation
-			pSPIHandle->TxLen = 0;
-			pSPIHandle->pTxBuffer = NULL;
-			pSPIHandle->TxState = SPI_READY;
+			SPI_CloseTransmisson(pSPIHandle);
 			// send call back function to the application to inform that TX is over
-			//SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_TX_CMPLT);
+			SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_TX_CMPLT);
 		}
 	}
 }
@@ -126,24 +123,42 @@ static void  spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle)
 			// increase to point to the next data
 			pSPIHandle->pRxBuffer++;
 		}
-		// check if pSPIHandle->TxLen is zero
+		// check if pSPIHandle->RxLen is zero
 		if(! pSPIHandle->RxLen)
 		{
 			//RxLen is zero , so close the spi transmission and inform the application that
 			//RX is over.
-
-			//this prevents interrupts from setting up of RXNE flag
-			pSPIHandle->pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_RXNEIE); // disable interrupt generation
-			pSPIHandle->TxLen = 0;
-			pSPIHandle->pTxBuffer = NULL;
-			pSPIHandle->TxState = SPI_READY;
+			SPI_CloseReception(pSPIHandle);
 			// send call back function to the application to inform that RX is over
-			//SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_TX_CMPLT);
+			SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_RX_CMPLT);
 		}
 	}
 }
-
-static void  spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle);
+/**
+*   @func     spi_rxne_interrupt_handle.c
+*
+*   @brief    handler for overrun event
+*   @details  This flag is set when data are received and the previous data have not yet been read from
+*             SPI_DR. As a result, the incoming data are lost. An interrupt may be generated if the ERRIE
+*             bit is set in SPI_CR2.
+*
+*/
+static void  spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle)
+{
+	// 1. clear Overrun flag (OVR)
+	uint16_t tempRegister;
+	if(pSPIHandle->TxState != SPI_BUSY_IN_TX)
+	{
+		// overrun only happend when data is receive. So check if the error when not doing TX
+		// Clearing the OVR bit is done by a read operation on the SPI_DR register followed by a read
+		// access to the SPI_SR register. - RM 28.4.8
+		tempRegister = pSPIHandle->pSPIx->SPI_DR;
+		tempRegister = pSPIHandle->pSPIx->SPI_SR;
+	}
+	(void)tempRegister; // avoid warning : unused variable
+	// 2. Send call back function to inform to the application
+	SPI_ApplicationEventCallback(pSPIHandle,SPI_EVENT_OVR_ERR);
+}
 /*==================================================================================================
 *                                        GLOBAL FUNCTIONS
 ==================================================================================================*/
@@ -794,3 +809,107 @@ Spi_JobResultType SPI_SSOEConfig(SPI_RegMap_t *pSPIx, uint8_t EnOrDI)
 	}
 	return eLldRetVal;
 }
+
+/**
+ * @brief       SPI_ClearOVRFlag
+ *
+ * @details     Clear the Overrun Flag
+ *  	        Clearing the OVR bit is done by a read operation on the SPI_DR register followed by a read
+ *	            access to the SPI_SR register. - RM 28.4.8
+ *
+ * @param[in]   pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+
+	uint16_t tempRegister;
+	// Clearing the OVR bit is done by a read operation on the SPI_DR register followed by a read
+	// access to the SPI_SR register. - RM 28.4.8
+	tempRegister = pSPIHandle->pSPIx->SPI_DR;
+	tempRegister = pSPIHandle->pSPIx->SPI_SR;
+	(void)tempRegister; // avoid warning : unused variable
+
+	return eLldRetVal;
+}
+
+/**
+ * @brief       SPI_CloseTransmisson
+ *
+ * @details     close the Spi transmission. Disable interrupt generation, reset Len, Buffer, State
+ *
+ * @param[in]   pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_CloseTransmisson(SPI_Handle_t *pSPIHandle)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+
+	//this prevents interrupts from setting up of TXE flag
+	pSPIHandle->pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_TXEIE); // disable interrupt generation
+	pSPIHandle->TxLen = 0;
+	pSPIHandle->pTxBuffer = NULL;
+	pSPIHandle->TxState = SPI_READY;
+
+	return eLldRetVal;
+}
+
+/**
+ * @brief       SPI_CloseReception
+ *
+ * @details     close the Spi Reception. Disable interrupt generation, reset Len, Buffer, State
+ *
+ * @param[in]   pSPIHandle :  Pointer to the SPI handle structure containing configuration parameters.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note
+ */
+Spi_JobResultType SPI_CloseReception(SPI_Handle_t *pSPIHandle)
+{
+	Spi_JobResultType eLldRetVal = SPI_JOB_OK;
+
+	//this prevents interrupts from setting up of RXNE flag
+	pSPIHandle->pSPIx->SPI_CR2 &= ~(1<<SPI_CR2_RXNEIE); // disable interrupt generation
+	pSPIHandle->RxLen = 0;
+	pSPIHandle->pRxBuffer = NULL;
+	pSPIHandle->RxState = SPI_READY;
+
+	return eLldRetVal;
+}
+
+/*---------------------------------------------------------------------------
+*                        Application callback function
+-----------------------------------------------------------------------------*/
+/**
+ * @brief       SPI_ApplicationEventCallback
+ *
+ * @details     This function may be override by user in the application.
+ *
+ * @param[in]   N/A
+ *
+ * @return      N/A
+ *
+ * @note
+ */
+__attribute__((weak)) void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle,uint8_t AppEvent)
+{
+	// This is a weak implementation.
+	// This function may be override by user in the application.
+	// User will decide what to do when the interrupt happen.
+}
+
+
