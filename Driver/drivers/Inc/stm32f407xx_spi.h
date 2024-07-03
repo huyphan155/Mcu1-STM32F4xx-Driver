@@ -150,6 +150,12 @@ Spi_JobResultType SPI_SentData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, u
 Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pTxBuffer, uint32_t Len);
 
 /*
+ * Data Sent and Receive in Interrupt
+ */
+Spi_JobResultType SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len);
+Spi_JobResultType SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len);
+
+/*
  * IRQ Configuration and ISR handling
  */
 Spi_JobResultType SPI_IRQInterruptConfig(uint8_t IRQNumber,uint8_t EnOrDI);

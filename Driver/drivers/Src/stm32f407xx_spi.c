@@ -273,11 +273,11 @@ Spi_JobResultType SPI_DeInit(SPI_RegMap_t *pSPIx)
 *                         Data Sent and Receive
 -----------------------------------------------------------------------------*/
 /**
- * @brief       Send data over SPI.
+ * @brief       Sent data over SPI.
  *
- * @details     This function sends data over SPI by continuously transmitting data until the specified length is reached.
+ * @details     This function sent data over SPI by continuously sending the data until the specified length is reached.
  *              This function waits for the transmit buffer to be empty
- *              before sending data and handles both 8-bit and 16-bit data transmission based on the configured data frame format (DFF).
+ *              before send data and handles both 8-bit and 16-bit data transmission based on the configured data frame format (DFF).
  *
  * @param[in]   pSPIx : Pointer to the SPI peripheral register map.
  * @param[in]   pTxBuffer :  Pointer to the transmit buffer containing data to be sent.
@@ -367,6 +367,40 @@ Spi_JobResultType SPI_ReceiveData(SPI_RegMap_t *pSPIx, Spi_BufferSize *pRxBuffer
 		}
 	}
 	return eLldRetVal;
+}
+/*---------------------------------------------------------------------------
+*                        Data Sent and Receive in Interrupt
+-----------------------------------------------------------------------------*/
+/**
+ * @brief       Sent data over SPI in Interrupt
+ *
+ * @details
+ *
+ *
+ *
+ * @param[in]
+ * @param[in]   pTxBuffer :  Pointer to the transmit buffer containing data to be sent.
+ * @param[in]   Len : Length of the data to be sent.
+ *
+ * @return      Spi_JobResultType.
+ * @retval      SPI_JOB_OK: Data transmission completed successfully.
+ * @retval      OTHER : The job failed
+ *
+ * @note       Not write data to the data register inside this function, interrupt handle will do that.
+ */
+Spi_JobResultType SPI_SentDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len)
+{
+	// 1. Save the Tx buffer address and Len information in some global var
+	//2.  Mark the SPI state as busy in transmission so that
+	//    no other code can take over same SPI peripheral until transmission is over
+	//3. Enable the TXEIE control bit to get interrupt whenever TXE flag is set in SR
+}
+Spi_JobResultType SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, Spi_BufferSize *pTxBuffer, uint32_t Len)
+{
+	//1 . Save the Rx buffer address and Len information in some global variables
+	//2.  Mark the SPI state as busy in reception so that
+	//    no other code can take over same SPI peripheral until reception is over
+	//3. Enable the RXNEIE control bit to get interrupt whenever RXNEIE flag is set in SR
 }
 
 /*---------------------------------------------------------------------------
